@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Davide Zangari</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f0f0f;
+      color: white;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 60px 20px;
+    }
+
+    h1, h2 {
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 48px;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-top: 60px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 10px;
+    }
+
+    p {
+      color: #aaa;
+    }
+
+    .hero {
+      text-align: center;
+      padding-top: 100px;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 18px;
+    }
+
+    .card {
+      background: #151515;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+
+    a {
+      color: white;
+      text-decoration: none;
+    }
+
+    a:hover {
+      opacity: 0.7;
+    }
+
+    a .card:hover {
+      background: #1a1a1a;
+      cursor: pointer;
+      transform: translateY(-2px);
+      transition: all 0.3s ease;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #222;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-right: 6px;
+      color: #ccc;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container hero">
+    <h1>Davide Zangari</h1>
+    <div class="subtitle">AI Developer • Computer scientist</div>
+  </div>
+
+  <div class="container">
+
+    <h2>About Me</h2>
+    <p>
+      I was born in 1999 in Monza, now I live in Biassono (MB). I am passionate about Artificial Intelligence, technology, and problem solving.
+      I enjoy building practical projects, experimenting with models,
+      and turning ideas into working prototypes. I'm focusing on signal and image processing, the healthcare and medical sectors, but I am always eager to learn new techniques and explore innovative applications of AI in all the fields.
+    </p>
+
+    <h2>Portfolio</h2>
+
+    <div class="grid">
+
+      <div class="card">
+        <h3>Fair Credit Scoring System (2025) </h3>
+        <p>Fair credit eligibility prediction using ML and deep learning with explainability analysis via SHAP.</p>
+        <span class="tag">Python</span>
+        <span class="tag">Deep Learning</span>
+        <span class="tag">XAI</span>
+        <p><a href="https://colab.research.google.com/drive/1-rOCVK5SqM-Bys0okcFERvECRAySa7_I?usp=drive_link">View project →</a></p>
+      </div>
+
+      <div class="card">
+        <h3>Image segmentation (2023) </h3>
+        <p>Drone image segmentation and spot landing detection for a flying drone</p>
+        <span class="tag">Python</span>
+        <span class="tag">Open CV</span>
+        <span class="tag">Transfer Learning</span>
+        <span class="tag">Ngrok</span>
+        <span class="tag">Streamlit GUI colab</span>
+        <p><a href="https://colab.research.google.com/drive/1r1Yum9jtj7MPHepx2i0PcE6ss72UKvR_?usp=drive_link">View project →</a></p>
+      </div>
+
+      <div class="card">
+        <h3>EEG prediction (2023) </h3>
+        <p>Seizure prediction from EEG data</p>
+        <span class="tag">Medical signal processing</span>
+        <span class="tag">EEG</span>
+        <span class="tag">svm</span>
+        <span class="tag">Random Forest</span>
+        <span class="tag">tkinter GUI</span>
+        <p><a href="https://drive.google.com/file/d/1EuXoM9vZdiWatjw6R8Kc3rNu0zZuX-n2/view?usp=drive_link">View project →</a></p>
+      </div>
+
+      <div class="card">
+        <h3>Object recognition (2023) </h3>
+        <p>Supervised learning techniques to predict the class of an image</p>
+        <span class="tag">Pytorch</span>
+        <span class="tag">Data augmentation</span>
+        <span class="tag">Resnet50</span>
+        <span class="tag">SIFT</span>
+        <span class="tag">BoW</span>
+        <p><a href="https://colab.research.google.com/drive/1I4wMMsZbJBDuqacrlb-Zyvs8uMfPWTJ8?usp=drive_link">View project →</a></p>
+      </div>
+
+      <div class="card">
+        <h3>Social Services Analysis (2024)</h3>
+        <p>Comprehensive analysis with feature importance ranking, Ml classification, UMAP visualization.</p>
+        <span class="tag">R</span>
+        <span class="tag">Random Forest</span>
+        <span class="tag">UMAP</span>
+        <span class="tag">Clustering</span>
+        <span class="tag">Feature Ranking</span>
+        <span class="tag">Logistic Regression</span>
+        <p><a href="https://drive.google.com/file/d/1rKof-BUtutZw9SKEFrgigKP6HgbAW1N6/view?usp=drive_link">View project →</a></p>
+      </div>
+
+      <div class="card">
+        <h3>Diabetes findings (2023) </h3>
+        <p>Unsupervised learning techniques to discover pattern in unlabeled data</p>
+        <span class="tag">kmeans clustering</span>
+        <span class="tag">hierarchical clustering</span>
+        <span class="tag">OHE</span>
+        <span class="tag">PCA</span>
+        <p><a href="https://colab.research.google.com/drive/1I4wMMsZbJBDuqacrlb-Zyvs8uMfPWTJ8?usp=drive_link">View project →</a></p>
+      </div>
+
+    </div>
+
+    <h2>Interests</h2>
+    <p>
+      Beyond technology, I cultivate interests that support creativity and long-term thinking:
+    </p>
+
+    <div class="grid">
+      <a href="painting.html" style="text-decoration: none;">
+        <div class="card">🎨 Painting & Visual Arts</div>
+      </a>
+      <a href="films.html" style="text-decoration: none;">
+        <div class="card">🎬 Films & Reading</div>
+      </a>
+      <a href="philosophy.html" style="text-decoration: none;">
+        <div class="card">🧠 Psychology & Philosophy</div>
+      </a>
+
+      <a href="animals.html" style="text-decoration: none;">
+        <div class="card"> 🐵 Animals  </div>
+      </a>
+
+            <a href="plants.html" style="text-decoration: none;">
+        <div class="card"> 🍀 Plants & Flowers </div>
+      </a>
+
+            <a href="travels.html" style="text-decoration: none;">
+        <div class="card"> 🌍 Travelling & Nature </div>
+      </a>
+
+    </div>
+
+
+
+    <h2>Education</h2>
+    <div class="card">
+      <p>
+        <p><strong>Bachelor degree: Computer science</strong> [unimib 2023]</p>
+        <p><strong>Master degree: Artificial Intelligence for Science and Technology</strong>, Image and signal processing for healthcare and environment track [unimib-unimi-unipv 2026] </p>
+        <p><strong>English level C1</strong>: Bbtween Rosetta stone [2025]</p>
+      </p>
+    </div>
+
+    <h2>Work Experience</h2>
+    <div class="card">
+      <p>
+        <p><strong>Research and testing of android applications and tools</strong> [unimib, jun 2022 - oct 2022] </p>
+       <p><strong>Development of an adaptive chatbot</strong> [neurab, sep 2025 - ]</p>
+
+      </p>
+    </div>
+
+    <h2>Contact me</h2>
+    <div class="card">
+      <p>
+        📧 davidezangari93@gmail.com<br>
+        💼 <a href="https://it.linkedin.com/in/davide-z-2940a3233?trk=people-guest_people_search-card">LinkedIn</a><br>
+      </p>
+    </div>
+
+  </div>
+
+  <footer>
+    © 2026 • Davide Zangari
+  </footer>
+
+</body>
+</html>

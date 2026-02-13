@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Places - Davide Zangari</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f0f0f;
+      color: white;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 60px 20px;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #aaa;
+      font-size: 16px;
+      margin-bottom: 40px;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .artwork {
+      background: #151515;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+    }
+
+    .artwork:hover {
+      transform: translateY(-5px);
+    }
+
+    .artwork img {
+      width: 100%;
+      height: 350px;
+      object-fit: cover;
+    }
+
+    .artwork-title {
+      padding: 15px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    .back-link {
+      margin-top: 40px;
+      font-size: 14px;
+    }
+
+    a {
+      color: #888;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 14px;
+      margin-top: 60px;
+      border-top: 1px solid #222;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>My favourite places where I have been or I'm planning to visit</h1>
+    <p>Someone asks what is the beauty?</p>
+
+    <div class="gallery">
+      <div class="artwork">
+        <img src="https://cdn.blastness.biz/media/1509/top/thumbs/full/1920-lecce_new.jpg" alt="">
+        <div class="artwork-title">Lecce, Puglia</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0d/0b/5d/5f/photo1jpg.jpg?w=2000&h=1200&s=1" alt="">
+        <div class="artwork-title">Nonza, Corse</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://tourismmedia.italia.it/is/image/mitur/20210309115806-torre-di-porto-giunco?wid=1080&hei=660&fit=constrain,1&fmt=webp" alt="">
+        <div class="artwork-title">Villasimius, Sardinia</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://www.ignas.com/it/blog/wp-content/uploads/2025/05/Tropea.png" alt="">
+        <div class="artwork-title">Tropea, Calabria</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://www.bongitravel.it/sites/default/files/styles/offer_large/public/gallery_blog/san-paolo_lindos.jpg?itok=vSsGvVfR" alt="">
+        <div class="artwork-title">Lindos, Rhodes</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://www.visititaly.com/app_tools/crop.aspx?&img=images/data/spiaggia-di-ficogrande-stromboli..jpg&w=1024&h=683" alt="">
+        <div class="artwork-title">Stromboli, Sicilia</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://i0.wp.com/mundodosviajantes.com/wp-content/uploads/2021/07/Covo-10.jpg?resize=700%2C466&ssl=1" alt="">
+        <div class="artwork-title">Porto corvo, Portugual</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://theindianface.com/cdn/shop/articles/surf-en-nazare-portugal-8.jpg?v=1616068668" alt="">
+        <div class="artwork-title">Nazarè, Portugual</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://www.calabria-tour.it/wp-content/uploads/2025/01/Escursioni-in-barca-San-Nicola-Arcella.jpg" alt="">
+        <div class="artwork-title">Arcomagno, Calabria</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiLE2jqPogOHXFwIsaHR6Xq7Lh32YadcXejw&s" alt="">
+        <div class="artwork-title">Isola di Dino, Calabria</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://calabriastraordinaria.it/storage/images/644/conversions/99efa6e3f0dc11d79bc80ccb9d9c319d-thumb.jpg" alt="">
+        <div class="artwork-title">Le Castella, Calabria</div>
+      </div>
+
+          
+      <div class="artwork">
+        <img src="https://blog.geografia.deascuola.it/uploads/2018/12/shutterstock_1123042988.jpg" alt="">
+        <div class="artwork-title">Dune du Pilat, Bordeaux</div>
+      </div>
+
+      <div class="artwork">
+        <img src="https://res.cloudinary.com/enchanting/q_70,f_auto,c_fill,g_face/leboat-web/2024/07/carcassonne_canal_du-midi_card_800x430.jpg" alt="">
+        <div class="artwork-title">Carcassonne, France</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://www.franciaturismo.net/wp-content/uploads/sites/4/calanques-parco-nazionale-hd.jpg" alt="">
+        <div class="artwork-title">Calanques, Marseille</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://ychef.files.bbci.co.uk/1280x720/p08ckt5d.jpg" alt="">
+        <div class="artwork-title">Campione d'Italia</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://grecia365.it/images/banners/ccimage-shutterstock-213006586.jpg" alt="">
+        <div class="artwork-title">Meteore, Greece</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://www.viadellaseta.net/wp-content/uploads/2014/09/Castello-di-Predjama-Postumia-Slovenia.jpg" alt="">
+        <div class="artwork-title">Postumia, Sloveny</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://images.contentstack.io/v3/assets/blt06f605a34f1194ff/blt54de2342c6f3ecfa/67eecf278d0b99c366e0efeb/BCC-2025-EXPLORER-DUBROVNIK-BEACHES-HEADER-MOBILE.jpg?fit=crop&disable=upscale&auto=webp&quality=60&crop=smart" alt="">
+        <div class="artwork-title">Dubrovnik, Croatia</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://www.grecia.info/wp-content/uploads/sites/71/albania-ksamil.jpg" alt="">
+        <div class="artwork-title">Ksamil, Albania</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://static2-viaggi.corriereobjects.it/wp-content/uploads/2022/10/Apertura-iStock-951469758-ok.jpg.webp?v=1666977327" alt="">
+        <div class="artwork-title">Kotor, Montenegro</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://static2-viaggi.corriereobjects.it/wp-content/uploads/2022/06/8skopje.jpg?v=1655746358" alt="">
+        <div class="artwork-title">Skopje, North Macedonia</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://www.nomadicseasons.com/wp-content/uploads/2022/07/DJI_0085-1.jpg" alt="">
+        <div class="artwork-title">Belgrado, Serbia</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://boscolo-viaggi-res.cloudinary.com/images/w_2560,h_1706/f_auto,q_auto/v1676303925/Destinazioni/Germania/2_SM_porta_Brandeburgo_Berlino_SIM-508634_cqr0sm/2_SM_porta_Brandeburgo_Berlino_SIM-508634_cqr0sm.jpg?_i=AA" alt="">
+        <div class="artwork-title">Berlin, Germany</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://images.trvl-media.com/place/553248621532487534/a44bfc77-269c-4711-b28e-d76943fb371f.jpg" alt="">
+        <div class="artwork-title">Santander, Cantabria</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://untrolleyperdue.it/wp-content/uploads/2025/07/san-sebastian-cosa-vedere-untrolleyperdue.jpg" alt="">
+        <div class="artwork-title">San Sebastian, Paesi baschi</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://img.nh-hotels.net/a9lpo/8MXbDD/original/Travel+Guides+%E2%80%93+City+Guide+%E2%80%93+Amsterdam+-+bicis+en+canal.jpg" alt="">
+        <div class="artwork-title">Amsterdam, Netherlands</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://www.10cose.it/wp-content/uploads/2015/09/bruxelles.jpg" alt="">
+        <div class="artwork-title">Bruxelles, Belgium</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://img.hostelworldblog.com/blog/wp-content/uploads/2024/01/dreamstime_s_39798077.jpg" alt="">
+        <div class="artwork-title">Venice, Italy</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://tourismmedia.italia.it/is/image/mitur/20210401173629-firenze-toscana-gettyimages-1145040590-2?wid=1600&hei=900&fit=constrain,1&fmt=webp" alt="">
+        <div class="artwork-title">Florence, Italy</div>
+      </div>
+
+           <div class="artwork">
+        <img src="https://assets.voxcity.com/uploads/blog_images/What-is-the-first-place-to-visit-when-you-travel-to-Rome_original.jpg" alt="">
+        <div class="artwork-title">Rome, Italy</div>
+      </div>  
+      
+      <div class="back-link">
+      <a href="index.html">← Back to Portfolio</a>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 • Davide Zangari
+  </footer>
+</body>
+</html>
