@@ -95,6 +95,27 @@
       color: #666;
       font-size: 14px;
     }
+
+    .pagination-btn {
+      background: #222;
+      color: #ccc;
+      border: none;
+      padding: 10px 15px;
+      margin: 0 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .pagination-btn:hover {
+      background: #333;
+      color: white;
+    }
+
+    .pagination-btn.active {
+      background: #555;
+      color: white;
+    }
   </style>
 </head>
 
@@ -116,9 +137,9 @@
 
     <h2>Portfolio</h2>
 
-    <div class="grid">
+    <div id="portfolio-grid" class="grid">
 
-           <div class="card">
+      <div class="card">
         <h3>3D lung segmentation (2026) </h3>
         <p>Delineating organs at risk (OARs) in CT images for thoracic radiation treatment planning..</p>
         <span class="tag">Python</span>
@@ -131,6 +152,26 @@
       </div>
 
       <div class="card">
+        <h3>AI Tutor (2026)</h3>
+        <p>An optimized chatbot for educational purposes.</p>
+        <span class="tag">Javascript</span>
+        <span class="tag">webapp</span>
+        <span class="tag">Netlify</span>
+        <span class="tag">OpenRouter API</span>
+        <p><a href="https://unrivaled-bombolone-74b9e6.netlify.app/">Try chatbot →</a></p>
+      </div>
+
+      <div class="card">
+        <h3>GeoQuiz Game (2026)</h3>
+        <p>A simple geographic quiz web application.</p>
+        <span class="tag">HTML</span>
+        <span class="tag">webapp</span>
+        <span class="tag">Netlify</span>
+        <span class="tag">multiplayer</span>
+        <p><a href="https://tangerine-baklava-24c609.netlify.app/geoquiz/">Try game →</a></p>
+      </div>
+      
+      <div class="card">
         <h3>Fair Credit Scoring System (2025) </h3>
         <p>Fair credit eligibility prediction using ML and deep learning with explainability analysis via SHAP.</p>
         <span class="tag">Python</span>
@@ -140,6 +181,29 @@
         <p><a href="https://docs.google.com/presentation/d/1A0bT4hq5jpwBj7l8TebzKjRKSGmuLK_l/edit?usp=drive_link&ouid=117033141094745948407&rtpof=true&sd=true">View presentation →</a></p>
       </div>
 
+      <div class="card">
+        <h3>Colorectal cancer classification (2024)</h3>
+        <p>Comprehensive statistical analysis with feature importance ranking, Ml classification, UMAP visualization.</p>
+        <span class="tag">R</span>
+        <span class="tag">Random Forest</span>
+        <span class="tag">UMAP</span>
+        <span class="tag">Clustering</span>
+        <span class="tag">Feature Ranking</span>
+        <span class="tag">Logistic Regression</span>
+        <p><a href="https://drive.google.com/file/d/1rKof-BUtutZw9SKEFrgigKP6HgbAW1N6/view?usp=drive_link">View code →</a></p>
+        <p><a href="ttps://drive.google.com/file/d/1Pf9ML0SYowNpeDEcKThg6q4FE1wMyKC2/view?usp=drive_link">View presentation →</a></p>
+      </div>
+
+      <div class="card">
+        <h3>Leukemia Survival Analysis (2024)</h3>
+        <p>Descriptive and survival analysis of Hospital Data regarding acute lymphoblastic leukemia.</p>
+        <span class="tag">R</span>
+        <span class="tag">Kaplan-Meier</span>
+        <span class="tag">Cox Regression</span>
+        <p><a href="https://drive.google.com/file/d/107-7pBuVRLDykQ6Ln8mHmurFDNMm_YbD/view?usp=drive_link">View code →</a></p>
+        <p><a href="https://drive.google.com/file/d/1e263IB4KxD4DNo-MkKhNL_qy7w-Y6Uvs/view?usp=drive_link">View presentation →</a></p>
+      </div>
+      
       <div class="card">
         <h3>Image segmentation (2023) </h3>
         <p>Drone image segmentation and spot landing detection for a flying drone</p>
@@ -172,30 +236,6 @@
         <span class="tag">BoW</span>
         <p><a href="https://colab.research.google.com/drive/1I4wMMsZbJBDuqacrlb-Zyvs8uMfPWTJ8?usp=drive_link">View project →</a></p>
       </div>
-
-      <div class="card">
-        <h3>Colorectal cancer classification (2024)</h3>
-        <p>Comprehensive statistical analysis with feature importance ranking, Ml classification, UMAP visualization.</p>
-        <span class="tag">R</span>
-        <span class="tag">Random Forest</span>
-        <span class="tag">UMAP</span>
-        <span class="tag">Clustering</span>
-        <span class="tag">Feature Ranking</span>
-        <span class="tag">Logistic Regression</span>
-        <p><a href="https://drive.google.com/file/d/1rKof-BUtutZw9SKEFrgigKP6HgbAW1N6/view?usp=drive_link">View code →</a></p>
-        <p><a href="ttps://drive.google.com/file/d/1Pf9ML0SYowNpeDEcKThg6q4FE1wMyKC2/view?usp=drive_link">View presentation →</a></p>
-      </div>
-
-      <div class="card">
-        <h3>Leukemia Survival Analysis (2024)</h3>
-        <p>Descriptive and survival analysis of Hospital Data regarding acute lymphoblastic leukemia.</p>
-        <span class="tag">R</span>
-        <span class="tag">Kaplan-Meier</span>
-        <span class="tag">Cox Regression</span>
-        <p><a href="https://drive.google.com/file/d/107-7pBuVRLDykQ6Ln8mHmurFDNMm_YbD/view?usp=drive_link">View code →</a></p>
-        <p><a href="https://drive.google.com/file/d/1e263IB4KxD4DNo-MkKhNL_qy7w-Y6Uvs/view?usp=drive_link">View presentation →</a></p>
-      </div>
-
 
       <div class="card">
         <h3>Diabetes findings (2023) </h3>
@@ -240,10 +280,13 @@
         <span class="tag">Genymotion</span>
         <span class="tag">Android Studio</span>
         <span class="tag">GIT</span>
+        <span class="tag">Firebase</span>
         <p><a href="https://github.com/tsankaris/TrovaCampi">View code →</a></p>
       </div>
       
     </div>
+
+    <div id="pagination" style="text-align: center; margin-top: 20px;"></div>
 
     <h2>Interests</h2>
     <p>
@@ -310,6 +353,44 @@
   <footer>
     © 2026 • Davide Zangari
   </footer>
+
+  <script>
+    const cardsPerPage = 6;
+    const grid = document.getElementById('portfolio-grid');
+    const cards = Array.from(grid.getElementsByClassName('card'));
+    const pagination = document.getElementById('pagination');
+    let currentPage = 1;
+
+    function showPage(page) {
+      const start = (page - 1) * cardsPerPage;
+      const end = start + cardsPerPage;
+      cards.forEach((card, index) => {
+        card.style.display = (index >= start && index < end) ? 'block' : 'none';
+      });
+      updatePaginationButtons(page);
+    }
+
+    function updatePaginationButtons(activePage) {
+      const totalPages = Math.ceil(cards.length / cardsPerPage);
+      pagination.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.className = 'pagination-btn';
+        if (i === activePage) {
+          btn.classList.add('active');
+        }
+        btn.addEventListener('click', () => {
+          currentPage = i;
+          showPage(currentPage);
+        });
+        pagination.appendChild(btn);
+      }
+    }
+
+    // Initialize
+    showPage(currentPage);
+  </script>
 
 </body>
 </html>
