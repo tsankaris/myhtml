@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoQuiz — Il Quiz di Geografia</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--surface2:#21262d;--gold:#e6c84a;--gold2:#f0d96b;--text:#e6edf3;--muted:#8b949e;--green:#3fb950;--red:#f85149;--blue:#58a6ff;--purple:#bc8cff;--radius:12px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(230,200,74,.12),transparent),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(63,185,80,.06),transparent);pointer-events:none;}
+.container{width:100%;max-width:720px;position:relative;}
+.screen{display:none;animation:fadeUp .4s ease both;}
+.screen.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HOME ── */
+.logo{font-family:'Fraunces',serif;font-size:clamp(2.5rem,8vw,5rem);font-weight:900;color:var(--gold);line-height:1;letter-spacing:-2px;}
+.logo span{color:var(--text);}
+.tagline{color:var(--muted);font-size:.8rem;letter-spacing:3px;text-transform:uppercase;margin-top:8px;margin-bottom:36px;}
+.section-label{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;margin-top:4px;}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.cat-btn{background:var(--surface);border:1px solid var(--surface2);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:left;transition:all .2s;position:relative;overflow:hidden;}
+.cat-btn:hover{border-color:var(--gold);transform:translateY(-2px);}
+.cat-btn.selected{border-color:var(--gold);background:rgba(230,200,74,.08);}
+.cat-btn.selected::after{content:'✓';position:absolute;top:8px;right:10px;color:var(--gold);font-size:.8rem;}
+.cat-btn.special{border-color:rgba(88,166,255,.4);background:rgba(88,166,255,.04);}
+.cat-btn.special:hover{border-color:var(--blue);}
+.cat-btn.special.selected{border-color:var(--blue);background:rgba(88,166,255,.1);}
+.cat-btn.special.selected::after{color:var(--blue);}
+.cat-icon{font-size:1.5rem;margin-bottom:5px;}
+.cat-name{font-size:.8rem;font-weight:500;color:var(--text);}
+.cat-desc{font-size:.65rem;color:var(--muted);margin-top:2px;}
+.cat-badge{display:inline-block;font-size:.58rem;padding:2px 7px;border-radius:100px;background:rgba(88,166,255,.15);color:var(--blue);border:1px solid rgba(88,166,255,.3);margin-top:3px;letter-spacing:1px;text-transform:uppercase;}
+.row-3{display:flex;gap:8px;margin-bottom:20px;}
+.row-3 button{flex:1;padding:9px;border-radius:8px;border:1px solid var(--surface2);background:var(--surface);color:var(--muted);font-family:'DM Mono',monospace;font-size:.78rem;cursor:pointer;transition:all .2s;}
+.row-3 button:hover{border-color:var(--gold);color:var(--text);}
+.row-3 button.selected{border-color:var(--gold);background:rgba(230,200,74,.1);color:var(--gold);}
+.btn-primary{width:100%;padding:15px;background:var(--gold);color:#0d1117;border:none;border-radius:var(--radius);font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px;}
+.btn-primary:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(230,200,74,.2);}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* ── MULTIPLAYER SETUP ── */
+.mp-toggle{display:flex;align-items:center;gap:10px;margin-bottom:20px;cursor:pointer;}
+.mp-toggle-track{width:44px;height:24px;background:var(--surface2);border-radius:100px;position:relative;transition:.2s;border:1px solid var(--surface2);}
+.mp-toggle-track.on{background:var(--purple);border-color:var(--purple);}
+.mp-toggle-thumb{width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s;}
+.mp-toggle-track.on .mp-toggle-thumb{transform:translateX(20px);}
+.mp-toggle-label{font-size:.8rem;color:var(--muted);}
+.mp-toggle-label.on{color:var(--purple);}
+.mp-players-wrap{display:none;background:var(--surface);border:1px solid var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:20px;}
+.mp-players-wrap.show{display:block;}
+.mp-player-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.mp-player-row:last-child{margin-bottom:0;}
+.mp-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.mp-input{flex:1;background:var(--surface2);border:1px solid var(--surface2);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:.82rem;outline:none;transition:.2s;}
+.mp-input:focus{border-color:var(--gold);}
+.mp-input::placeholder{color:var(--muted);}
+.mp-add-btn{background:none;border:1px dashed var(--surface2);border-radius:8px;padding:8px 14px;color:var(--muted);font-family:'DM Mono',monospace;font-size:.78rem;cursor:pointer;width:100%;transition:.2s;margin-top:4px;}
+.mp-add-btn:hover{border-color:var(--gold);color:var(--gold);}
+.mp-remove-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px;line-height:1;transition:.2s;}
+.mp-remove-btn:hover{color:var(--red);}
+
+/* ── TRANSITION: giocatore successivo ── */
+.player-transition{text-align:center;padding:40px 20px;}
+.pt-avatar{font-size:3rem;margin-bottom:12px;}
+.pt-name{font-family:'Fraunces',serif;font-size:2rem;font-weight:900;color:var(--text);margin-bottom:6px;}
+.pt-sub{color:var(--muted);font-size:.82rem;margin-bottom:32px;}
+.pt-scores{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:36px;}
+.pt-score-chip{background:var(--surface);border:1px solid var(--surface2);border-radius:100px;padding:6px 16px;font-size:.78rem;}
+.pt-score-chip span{color:var(--gold);font-weight:700;}
+
+/* ── QUIZ HEADER ── */
+.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.quiz-header-left{display:flex;align-items:center;gap:10px;}
+.back-btn{background:none;border:1px solid var(--surface2);border-radius:8px;padding:5px 10px;color:var(--muted);font-size:.7rem;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace;white-space:nowrap;}
+.back-btn:hover{border-color:var(--red);color:var(--red);}
+.progress-info{font-size:.7rem;color:var(--muted);}
+.progress-num{font-family:'Fraunces',serif;font-size:1.25rem;color:var(--gold);font-weight:700;}
+.score-badge{background:var(--surface);border:1px solid var(--surface2);border-radius:100px;padding:5px 12px;font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.score-badge strong{color:var(--gold);}
+.player-pip{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;}
+.progress-bar{height:3px;background:var(--surface2);border-radius:100px;margin-bottom:28px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--gold);border-radius:100px;transition:width .4s ease;}
+.category-tag{display:inline-block;font-size:.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:var(--surface);border:1px solid var(--surface2);border-radius:100px;padding:4px 12px;margin-bottom:16px;}
+.question-text{font-family:'Fraunces',serif;font-size:clamp(1.1rem,3.2vw,1.6rem);font-weight:700;line-height:1.3;margin-bottom:10px;color:var(--text);}
+.flag-display{text-align:center;margin:12px 0 20px;min-height:0;}
+.flag-display img{width:150px;height:100px;object-fit:cover;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.5);border:1px solid var(--surface2);display:block;margin:0 auto;}
+.flag-display.empty{margin:0;}
+.unesco-img-wrap{text-align:center;margin:12px 0 20px;}
+.unesco-img-wrap img{width:100%;max-width:500px;height:230px;object-fit:cover;border-radius:10px;box-shadow:0 6px 28px rgba(0,0,0,.6);border:1px solid var(--surface2);display:block;margin:0 auto;}
+.unesco-img-wrap.empty{margin:0;}
+.img-loading{color:var(--muted);font-size:.75rem;padding:16px;text-align:center;}
+.answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.answer-btn{background:var(--surface);border:1px solid var(--surface2);border-radius:var(--radius);padding:14px;text-align:left;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text);cursor:pointer;transition:all .15s;line-height:1.4;display:flex;align-items:center;gap:9px;}
+.answer-btn:hover:not(:disabled){border-color:var(--gold);transform:translateY(-1px);}
+.answer-btn .idx{width:22px;height:22px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;color:var(--muted);transition:all .15s;}
+.answer-btn:hover:not(:disabled) .idx{background:var(--gold);color:#0d1117;}
+.answer-btn.correct{border-color:var(--green);background:rgba(63,185,80,.1);}
+.answer-btn.correct .idx{background:var(--green);color:#fff;}
+.answer-btn.wrong{border-color:var(--red);background:rgba(248,81,73,.1);}
+.answer-btn.wrong .idx{background:var(--red);color:#fff;}
+.answer-btn:disabled{cursor:default;}
+.feedback-msg{text-align:center;padding:12px;border-radius:var(--radius);font-size:.82rem;margin-bottom:16px;opacity:0;transition:opacity .3s;}
+.feedback-msg.show{opacity:1;}
+.feedback-msg.correct-fb{background:rgba(63,185,80,.12);color:var(--green);border:1px solid rgba(63,185,80,.3);}
+.feedback-msg.wrong-fb{background:rgba(248,81,73,.1);color:var(--red);border:1px solid rgba(248,81,73,.3);}
+.next-btn{width:100%;padding:13px;background:transparent;border:1px solid var(--gold);border-radius:var(--radius);color:var(--gold);font-family:'Fraunces',serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;display:none;}
+.next-btn.show{display:block;}
+.next-btn:hover{background:rgba(230,200,74,.1);}
+
+/* ── GEOSPOT ── */
+.geospot-photo-wrap{position:relative;margin-bottom:14px;}
+.geospot-photo{width:100%;height:250px;object-fit:cover;border-radius:10px;border:1px solid var(--surface2);box-shadow:0 6px 28px rgba(0,0,0,.6);display:block;}
+.hint-btn{position:absolute;top:10px;right:10px;background:rgba(13,17,23,.85);border:1px solid var(--surface2);border-radius:100px;padding:6px 14px;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;backdrop-filter:blur(4px);}
+.hint-btn:hover{border-color:var(--gold);color:var(--gold);}
+.hint-popup{display:none;position:absolute;top:46px;right:10px;background:rgba(13,17,23,.95);border:1px solid var(--gold);border-radius:10px;padding:10px 14px;font-size:.78rem;color:var(--gold);max-width:220px;z-index:10;backdrop-filter:blur(8px);line-height:1.4;}
+.hint-popup.show{display:block;}
+.hint-popup .hint-label{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.map-wrap{position:relative;margin-bottom:14px;}
+#geoMap{width:100%;height:310px;border-radius:10px;border:1px solid var(--surface2);overflow:hidden;}
+.map-instruction{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(13,17,23,.88);color:var(--text);font-size:.7rem;padding:6px 14px;border-radius:100px;border:1px solid var(--surface2);pointer-events:none;z-index:1000;white-space:nowrap;backdrop-filter:blur(4px);}
+.map-instruction.hidden{display:none;}
+.guess-btn{width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-family:'Fraunces',serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:12px;display:none;}
+.guess-btn.show{display:block;}
+.guess-btn:hover{opacity:.88;transform:translateY(-1px);}
+.guess-btn:disabled{opacity:.5;cursor:default;transform:none;}
+.geo-result-box{background:var(--surface);border:1px solid var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:14px;display:none;}
+.geo-result-box.show{display:block;}
+.geo-pts{font-family:'Fraunces',serif;font-size:2.2rem;font-weight:900;color:var(--gold);text-align:center;}
+.geo-pts-label{font-size:.68rem;color:var(--muted);text-align:center;margin-top:2px;}
+.geo-dist{font-size:.82rem;color:var(--text);text-align:center;margin-top:8px;}
+
+/* ── CONFIRM DIALOG ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9000;align-items:center;justify-content:center;}
+.overlay.show{display:flex;}
+.dialog{background:var(--surface);border:1px solid var(--surface2);border-radius:16px;padding:28px;max-width:360px;width:90%;text-align:center;}
+.dialog h3{font-family:'Fraunces',serif;font-size:1.2rem;margin-bottom:8px;}
+.dialog p{color:var(--muted);font-size:.78rem;margin-bottom:20px;line-height:1.5;}
+.dialog-btns{display:flex;gap:10px;}
+.dialog-btns button{flex:1;padding:10px;border-radius:8px;font-family:'DM Mono',monospace;font-size:.78rem;cursor:pointer;transition:all .2s;}
+.dialog-confirm{background:var(--red);color:#fff;border:none;}
+.dialog-confirm:hover{opacity:.85;}
+.dialog-cancel{background:var(--surface2);color:var(--text);border:1px solid var(--surface2);}
+.dialog-cancel:hover{border-color:var(--muted);}
+
+/* ── RESULTS (solo + multi) ── */
+.result-hero{text-align:center;margin-bottom:32px;}
+.result-globe{font-size:3.5rem;margin-bottom:16px;}
+.result-score{font-family:'Fraunces',serif;font-size:clamp(2.8rem,10vw,4.5rem);font-weight:900;color:var(--gold);line-height:1;}
+.result-total{color:var(--muted);font-size:.8rem;margin-top:4px;}
+.result-label{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:700;margin-top:12px;color:var(--text);}
+.result-sub{color:var(--muted);font-size:.76rem;margin-top:5px;}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;}
+.stat-box{background:var(--surface);border:1px solid var(--surface2);border-radius:var(--radius);padding:14px;text-align:center;}
+.stat-val{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:700;color:var(--gold);}
+.stat-lbl{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
+/* LEADERBOARD */
+.leaderboard{margin-bottom:24px;}
+.lb-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;margin-bottom:14px;text-align:center;color:var(--text);}
+.lb-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--surface2);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px;transition:.2s;}
+.lb-row.first{border-color:var(--gold);background:rgba(230,200,74,.06);}
+.lb-row.second{border-color:rgba(192,192,192,.4);}
+.lb-row.third{border-color:rgba(205,127,50,.4);}
+.lb-rank{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:900;width:28px;text-align:center;flex-shrink:0;}
+.lb-rank.first{color:var(--gold);}
+.lb-rank.second{color:#c0c0c0;}
+.lb-rank.third{color:#cd7f32;}
+.lb-avatar{font-size:1.4rem;flex-shrink:0;}
+.lb-name{flex:1;font-size:.85rem;font-weight:500;}
+.lb-score{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;color:var(--gold);}
+.lb-acc{font-size:.65rem;color:var(--muted);text-align:right;margin-top:2px;}
+.btn-secondary{width:100%;padding:13px;background:var(--surface);border:1px solid var(--surface2);border-radius:var(--radius);color:var(--text);font-family:'DM Mono',monospace;font-size:.82rem;cursor:pointer;transition:all .2s;margin-top:10px;}
+.btn-secondary:hover{border-color:var(--muted);}
+
+@media(max-width:500px){
+  .cat-grid{grid-template-columns:1fr;}
+  .answers-grid{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:1fr;}
+  #geoMap{height:250px;}
+  .geospot-photo{height:195px;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ═══ HOME ═══ -->
+<div class="screen active" id="home">
+  <div class="logo">Geo<span>Quiz</span></div>
+  <div class="tagline">il quiz di geografia</div>
+
+  <div class="section-label">Modalità di gioco</div>
+  <div class="cat-grid">
+    <button class="cat-btn selected" data-cat="capitals" onclick="toggleCat(this)">
+      <div class="cat-icon">🏛️</div><div class="cat-name">Capitali</div><div class="cat-desc">Qual è la capitale di...?</div>
+    </button>
+    <button class="cat-btn selected" data-cat="flags" onclick="toggleCat(this)">
+      <div class="cat-icon">🚩</div><div class="cat-name">Bandiere</div><div class="cat-desc">Di che paese è questa bandiera?</div>
+    </button>
+    <button class="cat-btn selected" data-cat="populations" onclick="toggleCat(this)">
+      <div class="cat-icon">👥</div><div class="cat-name">Popolazione</div><div class="cat-desc">Quanti abitanti ha...?</div>
+    </button>
+    <button class="cat-btn selected" data-cat="geography" onclick="toggleCat(this)">
+      <div class="cat-icon">🗺️</div><div class="cat-name">Geografia</div><div class="cat-desc">Posizione, fiumi, montagne...</div>
+    </button>
+    <button class="cat-btn special" data-cat="geospot" onclick="toggleCat(this)">
+      <div class="cat-icon">📍</div><div class="cat-name">GeoSpot</div><div class="cat-desc">Clicca sulla mappa: dove siamo?</div>
+      <div class="cat-badge">★ Nuovo</div>
+    </button>
+    <button class="cat-btn special" data-cat="unesco" onclick="toggleCat(this)">
+      <div class="cat-icon">🏛</div><div class="cat-name">Siti UNESCO</div><div class="cat-desc">Riconosci il patrimonio mondiale</div>
+      <div class="cat-badge">★ Nuovo</div>
+    </button>
+  </div>
+
+  <div class="section-label">Difficoltà</div>
+  <div class="row-3">
+    <button onclick="setDiff(this,'easy')">Facile</button>
+    <button class="selected" onclick="setDiff(this,'medium')">Medio</button>
+    <button onclick="setDiff(this,'hard')">Difficile</button>
+  </div>
+
+  <div class="section-label">Domande per giocatore</div>
+  <div class="row-3" id="numRow">
+    <button onclick="setNum(this,1)">1</button>
+    <button onclick="setNum(this,5)">5</button>
+    <button class="selected" onclick="setNum(this,10)">10</button>
+    <button onclick="setNum(this,15)">15</button>
+    <button onclick="setNum(this,20)">20</button>
+  </div>
+
+  <!-- MULTIPLAYER TOGGLE -->
+  <div class="section-label">Multiplayer</div>
+  <div class="mp-toggle" onclick="toggleMultiplayer()">
+    <div class="mp-toggle-track" id="mpTrack"><div class="mp-toggle-thumb"></div></div>
+    <span class="mp-toggle-label" id="mpLabel">Giocatore singolo</span>
+  </div>
+  <div class="mp-players-wrap" id="mpWrap">
+    <div id="mpPlayerList"></div>
+    <button class="mp-add-btn" id="mpAddBtn" onclick="addPlayer()">+ Aggiungi giocatore</button>
+  </div>
+
+  <button class="btn-primary" id="startBtn" onclick="startGame()">Inizia il Quiz →</button>
+</div>
+
+<!-- ═══ PLAYER TRANSITION ═══ -->
+<div class="screen" id="playerTransition">
+  <div class="player-transition">
+    <div class="pt-avatar" id="ptAvatar">🎮</div>
+    <div class="pt-name" id="ptName">Giocatore</div>
+    <div class="pt-sub" id="ptSub">È il tuo turno! Preparati...</div>
+    <div class="pt-scores" id="ptScores"></div>
+    <button class="btn-primary" onclick="startPlayerTurn()">Inizia il mio turno →</button>
+  </div>
+</div>
+
+<!-- ═══ QUIZ (standard + UNESCO) ═══ -->
+<div class="screen" id="quiz">
+  <div class="quiz-header">
+    <div class="quiz-header-left">
+      <button class="back-btn" onclick="askBack()">← Menu</button>
+      <div>
+        <div class="progress-num" id="qNum">1</div>
+        <div class="progress-info" id="qTotal">/ 10</div>
+      </div>
+    </div>
+    <div class="score-badge">
+      <div class="player-pip" id="headerPip"></div>
+      <span id="headerPlayer" style="font-size:.72rem;"></span>
+      <strong id="scoreDisplay">0</strong> pt
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="category-tag" id="catTag">—</div>
+  <div class="question-text" id="questionText">—</div>
+  <div class="flag-display empty" id="flagDisplay"></div>
+  <div class="unesco-img-wrap empty" id="unescoImgWrap"></div>
+  <div class="answers-grid" id="answersGrid"></div>
+  <div class="feedback-msg" id="feedbackMsg"></div>
+  <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Prossima →</button>
+</div>
+
+<!-- ═══ GEOSPOT ═══ -->
+<div class="screen" id="geospot">
+  <div class="quiz-header">
+    <div class="quiz-header-left">
+      <button class="back-btn" onclick="askBack()">← Menu</button>
+      <div>
+        <div class="progress-num" id="gsNum">1</div>
+        <div class="progress-info" id="gsTotal">/ 10</div>
+      </div>
+    </div>
+    <div class="score-badge">
+      <div class="player-pip" id="gsHeaderPip"></div>
+      <span id="gsHeaderPlayer" style="font-size:.72rem;"></span>
+      <strong id="gsScore">0</strong> pt
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="gsProgressFill" style="width:0%"></div></div>
+  <div class="category-tag">📍 GeoSpot</div>
+
+  <div class="geospot-photo-wrap">
+    <img id="gsPhoto" class="geospot-photo" src="" alt="Dove siamo?"/>
+    <button class="hint-btn" onclick="toggleHint()" id="hintBtn">💡 Indizio</button>
+    <div class="hint-popup" id="hintPopup">
+      <div class="hint-label">Indizio</div>
+      <div id="hintText">—</div>
+    </div>
+  </div>
+
+  <div class="map-wrap">
+    <div class="map-instruction" id="mapInstruction">👆 Clicca sulla mappa per indicare la posizione</div>
+    <div id="geoMap"></div>
+  </div>
+
+  <button class="guess-btn" id="guessBtn" onclick="submitGuess()">✓ Conferma risposta</button>
+  <div class="geo-result-box" id="geoResultBox">
+    <div class="geo-pts" id="geoPts">0</div>
+    <div class="geo-pts-label">punti guadagnati</div>
+    <div class="geo-dist" id="geoDist"></div>
+  </div>
+  <div class="feedback-msg" id="gsFeedback"></div>
+  <button class="next-btn" id="gsNextBtn" onclick="nextQuestion()">Prossima →</button>
+</div>
+
+<!-- ═══ RESULTS ═══ -->
+<div class="screen" id="results">
+  <!-- Solo mode -->
+  <div id="soloResults">
+    <div class="result-hero">
+      <div class="result-globe" id="resultEmoji">🌍</div>
+      <div class="result-score" id="resultScore">0</div>
+      <div class="result-total" id="resultTotal">su 0 punti</div>
+      <div class="result-label" id="resultLabel">—</div>
+      <div class="result-sub" id="resultSub">—</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="statCorrect">0</div><div class="stat-lbl">Corrette</div></div>
+      <div class="stat-box"><div class="stat-val" id="statWrong">0</div><div class="stat-lbl">Errate</div></div>
+      <div class="stat-box"><div class="stat-val" id="statPct">0%</div><div class="stat-lbl">Precisione</div></div>
+    </div>
+  </div>
+  <!-- Multi mode -->
+  <div id="multiResults" style="display:none">
+    <div class="result-globe" style="text-align:center;font-size:3rem;margin-bottom:16px;">🏆</div>
+    <div class="leaderboard" id="leaderboard"></div>
+  </div>
+  <button class="btn-primary" onclick="startGame()">Gioca ancora →</button>
+  <button class="btn-secondary" onclick="showScreen('home')">Cambia impostazioni</button>
+</div>
+
+<!-- CONFIRM BACK -->
+<div class="overlay" id="backOverlay">
+  <div class="dialog">
+    <h3>Abbandonare il gioco?</h3>
+    <p>I progressi di questa partita andranno persi.</p>
+    <div class="dialog-btns">
+      <button class="dialog-cancel" onclick="closeBack()">Continua</button>
+      <button class="dialog-confirm" onclick="confirmBack()">Sì, esci</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STD_QUESTIONS = {
+capitals:[
+  {q:"Qual è la capitale della Francia?",flag:"fr",a:"Parigi",opts:["Parigi","Lione","Marsiglia","Bordeaux"],diff:"easy"},
+  {q:"Qual è la capitale del Giappone?",flag:"jp",a:"Tokyo",opts:["Tokyo","Osaka","Kyoto","Hiroshima"],diff:"easy"},
+  {q:"Qual è la capitale dell'Italia?",flag:"it",a:"Roma",opts:["Roma","Milano","Napoli","Torino"],diff:"easy"},
+  {q:"Qual è la capitale della Germania?",flag:"de",a:"Berlino",opts:["Berlino","Monaco","Amburgo","Colonia"],diff:"easy"},
+  {q:"Qual è la capitale della Spagna?",flag:"es",a:"Madrid",opts:["Madrid","Barcellona","Siviglia","Valencia"],diff:"easy"},
+  {q:"Qual è la capitale degli USA?",flag:"us",a:"Washington D.C.",opts:["New York","Washington D.C.","Los Angeles","Chicago"],diff:"easy"},
+  {q:"Qual è la capitale del Regno Unito?",flag:"gb",a:"Londra",opts:["Londra","Manchester","Birmingham","Edimburgo"],diff:"easy"},
+  {q:"Qual è la capitale dell'India?",flag:"in",a:"Nuova Delhi",opts:["Mumbai","Nuova Delhi","Bangalore","Kolkata"],diff:"easy"},
+  {q:"Qual è la capitale dell'Egitto?",flag:"eg",a:"Il Cairo",opts:["Il Cairo","Alessandria","Giza","Luxor"],diff:"easy"},
+  {q:"Qual è la capitale del Brasile?",flag:"br",a:"Brasilia",opts:["Rio de Janeiro","São Paulo","Brasilia","Salvador"],diff:"easy"},
+  {q:"Qual è la capitale dell'Islanda?",flag:"is",a:"Reykjavik",opts:["Reykjavik","Oslo","Helsinki","Stoccolma"],diff:"easy"},
+  {q:"Qual è la capitale del Portogallo?",flag:"pt",a:"Lisbona",opts:["Lisbona","Porto","Braga","Coimbra"],diff:"easy"},
+  {q:"Qual è la capitale della Grecia?",flag:"gr",a:"Atene",opts:["Atene","Salonicco","Patrasso","Creta"],diff:"easy"},
+  {q:"Qual è la capitale dell'Indonesia?",flag:"id",a:"Giacarta",opts:["Giacarta","Bali","Surabaya","Bandung"],diff:"easy"},
+  {q:"Qual è la capitale della Russia?",flag:"ru",a:"Mosca",opts:["Mosca","San Pietroburgo","Novosibirsk","Kazan"],diff:"easy"},
+  {q:"Qual è la capitale della Cina?",flag:"cn",a:"Pechino",opts:["Shanghai","Pechino","Hong Kong","Guangzhou"],diff:"easy"},
+  {q:"Qual è la capitale dell'Argentina?",flag:"ar",a:"Buenos Aires",opts:["Buenos Aires","Cordoba","Rosario","Mendoza"],diff:"easy"},
+  {q:"Qual è la capitale dell'Austria?",flag:"at",a:"Vienna",opts:["Vienna","Salisburgo","Graz","Innsbruck"],diff:"easy"},
+  {q:"Qual è la capitale del Belgio?",flag:"be",a:"Bruxelles",opts:["Bruxelles","Anversa","Gand","Liegi"],diff:"easy"},
+  {q:"Qual è la capitale dell'Olanda?",flag:"nl",a:"Amsterdam",opts:["Amsterdam","Rotterdam","Utrecht","L'Aia"],diff:"easy"},
+  {q:"Qual è la capitale della Svezia?",flag:"se",a:"Stoccolma",opts:["Stoccolma","Göteborg","Malmö","Uppsala"],diff:"easy"},
+  {q:"Qual è la capitale della Norvegia?",flag:"no",a:"Oslo",opts:["Oslo","Bergen","Trondheim","Stavanger"],diff:"easy"},
+  {q:"Qual è la capitale della Finlandia?",flag:"fi",a:"Helsinki",opts:["Helsinki","Tampere","Turku","Oulu"],diff:"easy"},
+  {q:"Qual è la capitale della Danimarca?",flag:"dk",a:"Copenaghen",opts:["Copenaghen","Aarhus","Odense","Aalborg"],diff:"easy"},
+  {q:"Qual è la capitale dell'Australia?",flag:"au",a:"Canberra",opts:["Sydney","Melbourne","Canberra","Brisbane"],diff:"medium"},
+  {q:"Qual è la capitale del Canada?",flag:"ca",a:"Ottawa",opts:["Toronto","Vancouver","Ottawa","Montreal"],diff:"medium"},
+  {q:"Qual è la capitale dell'Ucraina?",flag:"ua",a:"Kiev",opts:["Kiev","Kharkiv","Leopoli","Odessa"],diff:"medium"},
+  {q:"Qual è la capitale della Nigeria?",flag:"ng",a:"Abuja",opts:["Lagos","Abuja","Kano","Ibadan"],diff:"medium"},
+  {q:"Qual è la capitale della Nuova Zelanda?",flag:"nz",a:"Wellington",opts:["Auckland","Wellington","Christchurch","Hamilton"],diff:"medium"},
+  {q:"Qual è la capitale del Sudafrica?",flag:"za",a:"Pretoria",opts:["Johannesburg","Città del Capo","Pretoria","Durban"],diff:"medium"},
+  {q:"Qual è la capitale del Pakistan?",flag:"pk",a:"Islamabad",opts:["Karachi","Lahore","Islamabad","Peshawar"],diff:"medium"},
+  {q:"Qual è la capitale del Marocco?",flag:"ma",a:"Rabat",opts:["Casablanca","Rabat","Marrakech","Fes"],diff:"medium"},
+  {q:"Qual è la capitale della Svizzera?",flag:"ch",a:"Berna",opts:["Zurigo","Ginevra","Berna","Basilea"],diff:"medium"},
+  {q:"Qual è la capitale della Polonia?",flag:"pl",a:"Varsavia",opts:["Varsavia","Cracovia","Lodz","Danzica"],diff:"medium"},
+  {q:"Qual è la capitale della Romania?",flag:"ro",a:"Bucarest",opts:["Bucarest","Cluj","Timisoara","Iasi"],diff:"medium"},
+  {q:"Qual è la capitale dell'Algeria?",flag:"dz",a:"Algeri",opts:["Algeri","Orano","Costantina","Annaba"],diff:"medium"},
+  {q:"Qual è la capitale della Turchia?",flag:"tr",a:"Ankara",opts:["Istanbul","Ankara","Smirne","Bursa"],diff:"medium"},
+  {q:"Qual è la capitale dell'Arabia Saudita?",flag:"sa",a:"Riyad",opts:["Riyad","Gedda","Mecca","Medina"],diff:"medium"},
+  {q:"Qual è la capitale del Kenya?",flag:"ke",a:"Nairobi",opts:["Nairobi","Mombasa","Kisumu","Nakuru"],diff:"medium"},
+  {q:"Qual è la capitale della Thailandia?",flag:"th",a:"Bangkok",opts:["Bangkok","Chiang Mai","Phuket","Pattaya"],diff:"medium"},
+  {q:"Qual è la capitale della Corea del Sud?",flag:"kr",a:"Seul",opts:["Seul","Busan","Incheon","Daegu"],diff:"medium"},
+  {q:"Qual è la capitale delle Filippine?",flag:"ph",a:"Manila",opts:["Manila","Cebu","Davao","Quezon City"],diff:"medium"},
+  {q:"Qual è la capitale del Perù?",flag:"pe",a:"Lima",opts:["Lima","Arequipa","Cusco","Trujillo"],diff:"medium"},
+  {q:"Qual è la capitale del Cile?",flag:"cl",a:"Santiago",opts:["Santiago","Valparaíso","Concepción","Antofagasta"],diff:"medium"},
+  {q:"Qual è la capitale dell'Ungheria?",flag:"hu",a:"Budapest",opts:["Budapest","Debrecen","Miskolc","Pécs"],diff:"medium"},
+  {q:"Qual è la capitale della Repubblica Ceca?",flag:"cz",a:"Praga",opts:["Praga","Brno","Ostrava","Plzen"],diff:"medium"},
+  {q:"Qual è la capitale della Croazia?",flag:"hr",a:"Zagabria",opts:["Zagabria","Spalato","Dubrovnik","Rijeka"],diff:"medium"},
+  {q:"Qual è la capitale della Serbia?",flag:"rs",a:"Belgrado",opts:["Belgrado","Novi Sad","Nis","Kragujevac"],diff:"medium"},
+  {q:"Qual è la capitale dell'Uruguay?",flag:"uy",a:"Montevideo",opts:["Montevideo","Salto","Paysandú","Maldonado"],diff:"medium"},
+  {q:"Qual è la capitale del Venezuela?",flag:"ve",a:"Caracas",opts:["Caracas","Maracaibo","Valencia","Barquisimeto"],diff:"medium"},
+  {q:"Qual è la capitale dell'Ecuador?",flag:"ec",a:"Quito",opts:["Quito","Guayaquil","Cuenca","Manta"],diff:"medium"},
+  {q:"Qual è la capitale della Tunisia?",flag:"tn",a:"Tunisi",opts:["Tunisi","Sfax","Sousse","Kairouan"],diff:"medium"},
+  {q:"Qual è la capitale del Senegal?",flag:"sn",a:"Dakar",opts:["Dakar","Thiès","Kaolack","Saint-Louis"],diff:"medium"},
+  {q:"Qual è la capitale del Kazakistan?",flag:"kz",a:"Astana",opts:["Almaty","Astana","Shymkent","Aktobe"],diff:"hard"},
+  {q:"Qual è la capitale del Myanmar?",flag:"mm",a:"Naypyidaw",opts:["Yangon","Mandalay","Naypyidaw","Bago"],diff:"hard"},
+  {q:"Qual è la capitale del Bhutan?",flag:"bt",a:"Thimphu",opts:["Thimphu","Katmandu","Colombo","Dacca"],diff:"hard"},
+  {q:"Qual è la capitale dell'Eritrea?",flag:"er",a:"Asmara",opts:["Asmara","Mogadiscio","Gibuti","Addis Abeba"],diff:"hard"},
+  {q:"Qual è la capitale del Suriname?",flag:"sr",a:"Paramaribo",opts:["Paramaribo","Georgetown","Cayenne","Belem"],diff:"hard"},
+  {q:"Qual è la capitale del Kirghizistan?",flag:"kg",a:"Bishkek",opts:["Bishkek","Dushanbe","Tashkent","Ashgabat"],diff:"hard"},
+  {q:"Qual è la capitale della Tanzania?",flag:"tz",a:"Dodoma",opts:["Dar es Salaam","Dodoma","Kampala","Nairobi"],diff:"hard"},
+  {q:"Qual è la capitale del Tagikistan?",flag:"tj",a:"Dushanbe",opts:["Dushanbe","Tashkent","Bishkek","Ashgabat"],diff:"hard"},
+  {q:"Qual è la capitale dell'Uzbekistan?",flag:"uz",a:"Tashkent",opts:["Tashkent","Samarcanda","Bukhara","Nukus"],diff:"hard"},
+  {q:"Qual è la capitale del Laos?",flag:"la",a:"Vientiane",opts:["Vientiane","Luang Prabang","Pakse","Savannakhet"],diff:"hard"},
+  {q:"Qual è la capitale del Niger?",flag:"ne",a:"Niamey",opts:["Niamey","Zinder","Maradi","Agadez"],diff:"hard"},
+  {q:"Qual è la capitale del Ciad?",flag:"td",a:"N'Djamena",opts:["N'Djamena","Moundou","Sarh","Abéché"],diff:"hard"},
+],
+flags:[
+  {q:"Di che paese è questa bandiera?",flag:"de",a:"Germania",opts:["Austria","Germania","Belgio","Estonia"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"se",a:"Svezia",opts:["Finlandia","Norvegia","Danimarca","Svezia"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"ch",a:"Svizzera",opts:["Austria","Danimarca","Svizzera","Lussemburgo"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"ca",a:"Canada",opts:["Canada","USA","Australia","Nuova Zelanda"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"tr",a:"Turchia",opts:["Tunisia","Pakistan","Turchia","Azerbaijan"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"br",a:"Brasile",opts:["Brasile","Bolivia","Colombia","Ecuador"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"jp",a:"Giappone",opts:["Corea del Sud","Bangladesh","Giappone","Georgia"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"fr",a:"Francia",opts:["Francia","Paesi Bassi","Russia","Irlanda"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"it",a:"Italia",opts:["Italia","Messico","Irlanda","Costa d'Avorio"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"us",a:"USA",opts:["USA","Liberia","Malaysia","Australia"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"gb",a:"Regno Unito",opts:["Australia","Nuova Zelanda","USA","Regno Unito"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"cn",a:"Cina",opts:["Cina","Vietnam","Corea del Nord","Laos"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"in",a:"India",opts:["India","Niger","Costa Rica","Sierra Leone"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"gr",a:"Grecia",opts:["Grecia","Uruguay","Honduras","El Salvador"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"es",a:"Spagna",opts:["Spagna","Colombia","Venezuela","Ecuador"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"ru",a:"Russia",opts:["Russia","Francia","Slovacchia","Slovenia"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"dk",a:"Danimarca",opts:["Danimarca","Svizzera","Austria","Islanda"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"no",a:"Norvegia",opts:["Norvegia","Danimarca","Islanda","Finlandia"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"pt",a:"Portogallo",opts:["Portogallo","Brasile","Spagna","Italia"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"ar",a:"Argentina",opts:["Argentina","Uruguay","Honduras","El Salvador"],diff:"easy"},
+  {q:"Di che paese è questa bandiera?",flag:"pl",a:"Polonia",opts:["Austria","Indonesia","Ungheria","Polonia"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"ng",a:"Nigeria",opts:["Nigeria","Costa d'Avorio","Camerun","Senegal"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"nz",a:"Nuova Zelanda",opts:["Australia","Tuvalu","Nuova Zelanda","Figi"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"mc",a:"Monaco",opts:["Monaco","Indonesia","Polonia","Danimarca"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"za",a:"Sudafrica",opts:["Zimbabwe","Kenya","Sudafrica","Uganda"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"au",a:"Australia",opts:["Australia","Nuova Zelanda","Papua Nuova Guinea","Tuvalu"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"mx",a:"Messico",opts:["Messico","Italia","Ungheria","Bulgaria"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"eg",a:"Egitto",opts:["Egitto","Iraq","Siria","Yemen"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"sa",a:"Arabia Saudita",opts:["Arabia Saudita","Pakistan","Iran","Afghanistan"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"ua",a:"Ucraina",opts:["Ucraina","Svezia","Kazakistan","Argentina"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"kr",a:"Corea del Sud",opts:["Giappone","Corea del Sud","Mongolia","Taiwan"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"be",a:"Belgio",opts:["Belgio","Germania","Camerun","Ciad"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"at",a:"Austria",opts:["Austria","Lettonia","Svizzera","Monaco"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"ie",a:"Irlanda",opts:["Irlanda","Costa d'Avorio","Italia","Togo"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"il",a:"Israele",opts:["Israele","Grecia","Finlandia","Bielorussia"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"th",a:"Thailandia",opts:["Thailandia","Costa Rica","Liberia","Honduras"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"ph",a:"Filippine",opts:["Cuba","Honduras","Filippine","Slovacchia"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"cl",a:"Cile",opts:["Cile","Cuba","Puerto Rico","Malesia"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"ke",a:"Kenya",opts:["Kenya","Zimbabwe","Giamaica","Uganda"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"pe",a:"Perù",opts:["Perù","Colombia","Spagna","Monaco"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"hu",a:"Ungheria",opts:["Ungheria","Italia","Messico","Bulgaria"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"hr",a:"Croazia",opts:["Croazia","Serbia","Slovacchia","Rep. Ceca"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"my",a:"Malaysia",opts:["Liberia","Malaysia","Puerto Rico","Togo"],diff:"medium"},
+  {q:"Di che paese è questa bandiera?",flag:"kg",a:"Kirghizistan",opts:["Kazakistan","Uzbekistan","Kirghizistan","Tagikistan"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"ba",a:"Bosnia-Erzegovina",opts:["Kosovo","Albania","Macedonia","Bosnia-Erzegovina"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"ro",a:"Romania",opts:["Romania","Ciad","Andorra","Moldova"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"bh",a:"Bahrein",opts:["Qatar","Bahrein","Kuwait","Oman"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"mv",a:"Maldive",opts:["Pakistan","Maldive","Arabia Saudita","Mauritania"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"cy",a:"Cipro",opts:["Kosovo","Cipro","Malta","San Marino"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"lt",a:"Lituania",opts:["Lituania","Bolivia","Colombia","Ghana"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"ee",a:"Estonia",opts:["Estonia","Armenia","Botswana","Gabon"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"by",a:"Bielorussia",opts:["Russia","Serbia","Bielorussia","Austria"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"la",a:"Laos",opts:["Laos","Cambogia","Tailandia","Birmania"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"ge",a:"Georgia",opts:["Georgia","Svizzera","Croce Rossa","Danimarca"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"am",a:"Armenia",opts:["Armenia","Tagikistan","Lussemburgo","Paesi Bassi"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"md",a:"Moldova",opts:["Romania","Moldova","Albania","Kosovo"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"si",a:"Slovenia",opts:["Russia","Slovacchia","Slovenia","Serbia"],diff:"hard"},
+  {q:"Di che paese è questa bandiera?",flag:"al",a:"Albania",opts:["Albania","Montenegro","Serbia","Bulgaria"],diff:"hard"},
+],
+populations:[
+  {q:"Quale paese ha più abitanti al mondo?",flag:null,a:"India",opts:["USA","India","Cina","Russia"],diff:"easy"},
+  {q:"Quale paese è al 2° posto per popolazione?",flag:null,a:"Cina",opts:["Cina","USA","Indonesia","Pakistan"],diff:"easy"},
+  {q:"La popolazione mondiale è circa:",flag:null,a:"8 miliardi",opts:["6 miliardi","7 miliardi","8 miliardi","9 miliardi"],diff:"easy"},
+  {q:"Quale paese ha meno di 1.000 abitanti?",flag:null,a:"Vaticano",opts:["Monaco","San Marino","Vaticano","Liechtenstein"],diff:"easy"},
+  {q:"Quale paese ha circa 340 milioni di abitanti?",flag:"us",a:"USA",opts:["USA","Brasile","Pakistan","Nigeria"],diff:"easy"},
+  {q:"Quanti abitanti ha circa la Cina?",flag:"cn",a:"~1,4 miliardi",opts:["~900 milioni","~1,1 miliardi","~1,4 miliardi","~1,7 miliardi"],diff:"easy"},
+  {q:"Quale continente ha più abitanti?",flag:null,a:"Asia",opts:["Asia","Africa","Europa","America"],diff:"easy"},
+  {q:"Quale paese europeo ha più abitanti?",flag:null,a:"Germania",opts:["Italia","Germania","Francia","Spagna"],diff:"medium"},
+  {q:"Quale paese ha più abitanti in Africa?",flag:null,a:"Nigeria",opts:["Egitto","Nigeria","Etiopia","Congo"],diff:"medium"},
+  {q:"Quanti abitanti ha circa l'Italia?",flag:"it",a:"~59 milioni",opts:["~45 milioni","~59 milioni","~70 milioni","~80 milioni"],diff:"medium"},
+  {q:"Quanti abitanti ha circa il Brasile?",flag:"br",a:"~215 milioni",opts:["~130 milioni","~175 milioni","~215 milioni","~260 milioni"],diff:"medium"},
+  {q:"Quale paese ha circa 220 milioni di abitanti?",flag:"pk",a:"Pakistan",opts:["Pakistan","Bangladesh","Vietnam","Messico"],diff:"medium"},
+  {q:"Quanti abitanti ha circa la Russia?",flag:"ru",a:"~145 milioni",opts:["~100 milioni","~145 milioni","~200 milioni","~250 milioni"],diff:"medium"},
+  {q:"Quale paese europeo ha MENO abitanti?",flag:null,a:"Vaticano",opts:["Liechtenstein","Monaco","San Marino","Vaticano"],diff:"medium"},
+  {q:"Quanti abitanti ha circa il Giappone?",flag:"jp",a:"~125 milioni",opts:["~80 milioni","~100 milioni","~125 milioni","~150 milioni"],diff:"medium"},
+  {q:"Quanti abitanti ha circa la Germania?",flag:"de",a:"~84 milioni",opts:["~60 milioni","~70 milioni","~84 milioni","~100 milioni"],diff:"medium"},
+  {q:"Quanti abitanti ha circa la Francia?",flag:"fr",a:"~68 milioni",opts:["~55 milioni","~68 milioni","~80 milioni","~90 milioni"],diff:"medium"},
+  {q:"Quale paese ha la densità abitativa più alta?",flag:null,a:"Bangladesh",opts:["India","Bangladesh","Corea del Sud","Taiwan"],diff:"hard"},
+  {q:"Quale paese sudamericano ha meno di 600.000 ab.?",flag:null,a:"Suriname",opts:["Ecuador","Bolivia","Paraguay","Suriname"],diff:"hard"},
+  {q:"Quanti abitanti ha circa il Bangladesh?",flag:"bd",a:"~170 milioni",opts:["~100 milioni","~130 milioni","~170 milioni","~200 milioni"],diff:"hard"},
+  {q:"Quale paese del Medio Oriente ha più abitanti?",flag:null,a:"Iran",opts:["Arabia Saudita","Iraq","Iran","Turchia"],diff:"medium"},
+  {q:"Quanti abitanti ha circa il Canada?",flag:"ca",a:"~40 milioni",opts:["~25 milioni","~40 milioni","~55 milioni","~70 milioni"],diff:"medium"},
+],
+geography:[
+  {q:"Qual è il fiume più lungo del mondo?",flag:null,a:"Nilo",opts:["Nilo","Amazzonia","Mississippi","Yangtze"],diff:"easy"},
+  {q:"Qual è la montagna più alta del mondo?",flag:null,a:"Everest",opts:["K2","Everest","Kangchenjunga","Lhotse"],diff:"easy"},
+  {q:"In quale continente si trova il Sahara?",flag:null,a:"Africa",opts:["Africa","Asia","Australia","America del Sud"],diff:"easy"},
+  {q:"Qual è l'oceano più grande del mondo?",flag:null,a:"Pacifico",opts:["Atlantico","Pacifico","Indiano","Artico"],diff:"easy"},
+  {q:"In quale paese si trova la Torre Eiffel?",flag:null,a:"Francia",opts:["Francia","Belgio","Italia","Spagna"],diff:"easy"},
+  {q:"Qual è l'isola più grande del mondo?",flag:null,a:"Groenlandia",opts:["Nuova Guinea","Borneo","Groenlandia","Madagascar"],diff:"easy"},
+  {q:"Qual è il paese più grande del mondo per superficie?",flag:null,a:"Russia",opts:["Canada","USA","Cina","Russia"],diff:"easy"},
+  {q:"Quanti continenti ci sono?",flag:null,a:"7",opts:["5","6","7","8"],diff:"easy"},
+  {q:"In quale oceano si trovano le Hawaii?",flag:null,a:"Pacifico",opts:["Atlantico","Pacifico","Indiano","Artico"],diff:"easy"},
+  {q:"Quale fiume attraversa Roma?",flag:null,a:"Tevere",opts:["Po","Arno","Tevere","Adige"],diff:"easy"},
+  {q:"In quale paese si trova il Colosseo?",flag:null,a:"Italia",opts:["Italia","Grecia","Turchia","Egitto"],diff:"easy"},
+  {q:"In quale paese si trova la Torre di Pisa?",flag:null,a:"Italia",opts:["Italia","Spagna","Francia","Grecia"],diff:"easy"},
+  {q:"Quanti paesi ci sono nell'Unione Europea?",flag:null,a:"27",opts:["25","27","29","31"],diff:"easy"},
+  {q:"Qual è il fiume più lungo d'Europa?",flag:null,a:"Volga",opts:["Reno","Danubio","Volga","Tamigi"],diff:"easy"},
+  {q:"Qual è il deserto più grande del mondo?",flag:null,a:"Antartide",opts:["Sahara","Gobi","Antartide","Arabia"],diff:"medium"},
+  {q:"Quale paese attraversa l'equatore?",flag:null,a:"Ecuador",opts:["Colombia","Ecuador","Perù","Bolivia"],diff:"medium"},
+  {q:"Qual è il lago più profondo del mondo?",flag:null,a:"Lago Baikal",opts:["Titicaca","Superiore","Lago Baikal","Tanganyika"],diff:"medium"},
+  {q:"Quanti paesi confina l'Italia?",flag:"it",a:"6",opts:["4","5","6","7"],diff:"medium"},
+  {q:"Qual è la catena montuosa più lunga del mondo?",flag:null,a:"Ande",opts:["Alpi","Himalaya","Ande","Urali"],diff:"medium"},
+  {q:"Quale stretto separa Europa e Africa?",flag:null,a:"Gibilterra",opts:["Bering","Hormuz","Gibilterra","Suez"],diff:"medium"},
+  {q:"Qual è il punto più basso della Terra?",flag:null,a:"Mar Morto",opts:["Mar Morto","Mar Caspio","Valle della Morte","Qattara"],diff:"medium"},
+  {q:"Quale fiume attraversa Il Cairo?",flag:null,a:"Nilo",opts:["Nilo","Niger","Congo","Zambesi"],diff:"medium"},
+  {q:"In quale paese si trova Machu Picchu?",flag:null,a:"Perù",opts:["Bolivia","Perù","Ecuador","Colombia"],diff:"medium"},
+  {q:"In quale paese si trova il Taj Mahal?",flag:null,a:"India",opts:["India","Pakistan","Bangladesh","Nepal"],diff:"medium"},
+  {q:"Quale fiume attraversa Parigi?",flag:null,a:"Senna",opts:["Reno","Loira","Senna","Rodano"],diff:"medium"},
+  {q:"Quale fiume attraversa Londra?",flag:null,a:"Tamigi",opts:["Avon","Severn","Tamigi","Trent"],diff:"medium"},
+  {q:"Qual è il paese più piccolo del mondo?",flag:null,a:"Vaticano",opts:["Monaco","San Marino","Vaticano","Nauru"],diff:"medium"},
+  {q:"Quale è il lago più grande del mondo?",flag:null,a:"Mar Caspio",opts:["Lago Superiore","Lago Vittoria","Mar Caspio","Lago Baikal"],diff:"medium"},
+  {q:"Quale fiume ha le cascate Vittoria?",flag:null,a:"Zambesi",opts:["Congo","Nilo","Zambesi","Niger"],diff:"medium"},
+  {q:"In quale paese si trova la Sagrada Familia?",flag:null,a:"Spagna",opts:["Portogallo","Spagna","Italia","Francia"],diff:"medium"},
+  {q:"In quale continente si trova il Kazakistan?",flag:"kz",a:"Asia ed Europa",opts:["Solo Asia","Asia ed Europa","Solo Europa","Medio Oriente"],diff:"hard"},
+  {q:"Quale paese ha il maggior numero di fusi orari?",flag:null,a:"Francia",opts:["Russia","USA","Cina","Francia"],diff:"hard"},
+  {q:"Dove si trova il monte Elbrus?",flag:null,a:"Russia",opts:["Georgia","Russia","Turchia","Kazakistan"],diff:"hard"},
+  {q:"Quale canale collega Atlantico e Pacifico?",flag:null,a:"Canale di Panamà",opts:["Canale di Suez","Canale di Panamà","Stretto di Drake","Stretto di Magellano"],diff:"hard"},
+  {q:"Quale catena montuosa divide Europa e Asia?",flag:null,a:"Urali",opts:["Caucaso","Urali","Alpi","Carpazi"],diff:"hard"},
+  {q:"Quale paese ha la capitale più alta del mondo?",flag:null,a:"Bolivia",opts:["Perù","Bolivia","Ecuador","Colombia"],diff:"hard"},
+  {q:"Quanti paesi bagnati dal Mar Mediterraneo?",flag:null,a:"21",opts:["14","17","21","25"],diff:"hard"},
+  {q:"Dove si trova l'arcipelago di Svalbard?",flag:"no",a:"Norvegia",opts:["Islanda","Russia","Danimarca","Norvegia"],diff:"hard"},
+  {q:"Quale è il monte più alto del Sud America?",flag:null,a:"Aconcagua",opts:["Chimborazo","Aconcagua","Huascarán","Fitz Roy"],diff:"hard"},
+  {q:"In quale paese si trovano le isole Galápagos?",flag:"ec",a:"Ecuador",opts:["Perù","Cile","Colombia","Ecuador"],diff:"hard"},
+  {q:"Dove si trova la fossa delle Marianne?",flag:null,a:"Oceano Pacifico",opts:["Atlantico","Indiano","Oceano Pacifico","Artico"],diff:"hard"},
+  {q:"Quale è il paese senza sbocco al mare più grande?",flag:null,a:"Kazakistan",opts:["Mongolia","Bolivia","Kazakistan","Niger"],diff:"hard"},
+],
+};
+
+/* ═══════════════════════════════════════
+   GEOSPOT DATA  (60 luoghi con foto Wikimedia)
+═══════════════════════════════════════ */
+const GEOSPOT_PLACES = [
+  {name:"Torre Eiffel, Parigi",lat:48.8584,lng:2.2945,hint:"Monumento iconico europeo",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Sights_of_Paris_FI.jpg/640px-Sights_of_Paris_FI.jpg"},
+  {name:"Colosseo, Roma",lat:41.8902,lng:12.4922,hint:"Arena dell'Antica Roma",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Colosseo_2020.jpg/640px-Colosseo_2020.jpg"},
+  {name:"Sagrada Familia, Barcellona",lat:41.4036,lng:2.1744,hint:"Capolavoro di Gaudí",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Sagrada_Familia_01.jpg/640px-Sagrada_Familia_01.jpg"},
+  {name:"Big Ben, Londra",lat:51.5007,lng:-0.1246,hint:"Il simbolo di Londra",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Clock_Tower_-_Palace_of_Westminster%2C_London_-_May_2007.jpg/400px-Clock_Tower_-_Palace_of_Westminster%2C_London_-_May_2007.jpg"},
+  {name:"Taj Mahal, Agra",lat:27.1751,lng:78.0421,hint:"Mausoleo in marmo bianco, India",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Taj_Mahal%2C_Agra%2C_India_edit3.jpg/640px-Taj_Mahal%2C_Agra%2C_India_edit3.jpg"},
+  {name:"Machu Picchu, Perù",lat:-13.1631,lng:-72.5450,hint:"Città Inca sulle Ande",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Machu_Picchu%2C_Peru.jpg/640px-Machu_Picchu%2C_Peru.jpg"},
+  {name:"Statua della Libertà, New York",lat:40.6892,lng:-74.0445,hint:"Simbolo degli USA",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Statue_of_Liberty_7.jpg/400px-Statue_of_Liberty_7.jpg"},
+  {name:"Cristo Redentore, Rio de Janeiro",lat:-22.9519,lng:-43.2105,hint:"Statua sul Corcovado",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Statue_of_Jesus_R%C3%ADo_de_Janeiro.jpg/400px-Statue_of_Jesus_R%C3%ADo_de_Janeiro.jpg"},
+  {name:"Opera House, Sydney",lat:-33.8568,lng:151.2153,hint:"Teatro sulla baia australiana",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Sydney_Australia._%2821339175489%29.jpg/640px-Sydney_Australia._%2821339175489%29.jpg"},
+  {name:"Acropoli di Atene",lat:37.9715,lng:23.7267,hint:"Tempio del Partenone",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/The_Parthenon_in_Athens.jpg/640px-The_Parthenon_in_Athens.jpg"},
+  {name:"Mont Saint-Michel, Normandia",lat:48.6360,lng:-1.5115,hint:"Abbazia su un'isola marea",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Mont_Saint-Michel_from_the_west.jpg/640px-Mont_Saint-Michel_from_the_west.jpg"},
+  {name:"Piazza Rossa, Mosca",lat:55.7539,lng:37.6208,hint:"Centro della capitale russa",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Red_Square_Kremlin_Panorama.jpg/640px-Red_Square_Kremlin_Panorama.jpg"},
+  {name:"Angkor Wat, Cambogia",lat:13.4125,lng:103.8670,hint:"Tempio nel mezzo della giungla",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Angkor_Wat%2C_Camboya%2C_2013-08-16%2C_DD_50.jpg/640px-Angkor_Wat%2C_Camboya%2C_2013-08-16%2C_DD_50.jpg"},
+  {name:"Petra, Giordania",lat:30.3285,lng:35.4444,hint:"Città scolpita nella roccia rossa",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Petra_Jordan_BW_21.JPG/640px-Petra_Jordan_BW_21.JPG"},
+  {name:"Piramidi di Giza, Egitto",lat:29.9792,lng:31.1342,hint:"Una delle 7 meraviglie del mondo antico",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/All_Gizah_Pyramids.jpg/640px-All_Gizah_Pyramids.jpg"},
+  {name:"Muro della Muraglia Cinese",lat:40.4319,lng:116.5704,hint:"La più lunga struttura difensiva mai costruita",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/20090529_great_wall_8185.jpg/640px-20090529_great_wall_8185.jpg"},
+  {name:"Alhambra, Granada",lat:37.1760,lng:-3.5881,hint:"Palazzo moresco in Spagna",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Alhambra_Granada_Spain.jpeg/640px-Alhambra_Granada_Spain.jpeg"},
+  {name:"Duomo di Milano",lat:45.4641,lng:9.1919,hint:"La cattedrale gotica più grande d'Italia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Duomo_di_Milano_%28Ank_Kumar%29_07.jpg/640px-Duomo_di_Milano_%28Ank_Kumar%29_07.jpg"},
+  {name:"Neuschwanstein, Baviera",lat:47.5576,lng:10.7498,hint:"Il castello delle favole in Germania",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Schloss_Neuschwanstein_2013.jpg/640px-Schloss_Neuschwanstein_2013.jpg"},
+  {name:"Santorini, Grecia",lat:36.3932,lng:25.4615,hint:"Isola con case bianche e cupole blu",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Santorini_2021.jpg/640px-Santorini_2021.jpg"},
+  {name:"Burj Khalifa, Dubai",lat:25.1972,lng:55.2744,hint:"L'edificio più alto del mondo",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Burj_Khalifa_from_the_ground.jpg/400px-Burj_Khalifa_from_the_ground.jpg"},
+  {name:"Golden Gate Bridge, San Francisco",lat:37.8199,lng:-122.4783,hint:"Il famoso ponte rosso californiano",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/GoldenGateBridge-001.jpg/640px-GoldenGateBridge-001.jpg"},
+  {name:"Chichén Itzá, Messico",lat:20.6843,lng:-88.5678,hint:"Piramide dei Maya",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Chichen_Itza_3.jpg/640px-Chichen_Itza_3.jpg"},
+  {name:"Stonehenge, Inghilterra",lat:51.1789,lng:-1.8262,hint:"Misterioso cerchio di pietre preistoriche",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Stonehenge2007_07_30.jpg/640px-Stonehenge2007_07_30.jpg"},
+  {name:"Torre di Pisa",lat:43.7229,lng:10.3966,hint:"Famosa per la sua pendenza",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Leaning_tower_of_pisa_2.jpg/400px-Leaning_tower_of_pisa_2.jpg"},
+  {name:"Cattedrale di Notre-Dame, Parigi",lat:48.8530,lng:2.3499,hint:"Capolavoro del gotico francese",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Notre-Dame_de_Paris%2C_13_August_2012.jpg/640px-Notre-Dame_de_Paris%2C_13_August_2012.jpg"},
+  {name:"Colonia, Cattedrale del Reno",lat:50.9413,lng:6.9583,hint:"La più grande cattedrale gotica della Germania",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Cologne_Cathedral_from_above_2012.jpg/640px-Cologne_Cathedral_from_above_2012.jpg"},
+  {name:"Fjordi norvegesi, Geirangerfjord",lat:62.1000,lng:7.2000,hint:"Paesaggio naturale nel nord Europa",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Geiranger_fjord%2C_Norway.jpg/640px-Geiranger_fjord%2C_Norway.jpg"},
+  {name:"Hagia Sophia, Istanbul",lat:41.0086,lng:28.9802,hint:"Basilica poi moschea poi museo",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Hagia_Sophia_Istanbul_2023.jpg/640px-Hagia_Sophia_Istanbul_2023.jpg"},
+  {name:"Canale Grande, Venezia",lat:45.4371,lng:12.3357,hint:"La città sull'acqua",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Canale_Grande_Bridge_of_sighs.jpg/640px-Canale_Grande_Bridge_of_sighs.jpg"},
+  {name:"Cascate Niagara",lat:43.0799,lng:-79.0747,hint:"Al confine tra USA e Canada",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Niagara_Falls_%28330423045%29.jpg/640px-Niagara_Falls_%28330423045%29.jpg"},
+  {name:"Kilimanjaro, Tanzania",lat:-3.0674,lng:37.3556,hint:"Il tetto dell'Africa",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Kilimanjaro_from_amboseli_%28edit%29.jpg/640px-Kilimanjaro_from_amboseli_%28edit%29.jpg"},
+  {name:"Monte Fuji, Giappone",lat:35.3606,lng:138.7274,hint:"Il vulcano sacro del Giappone",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/080103_hakkai_fuji.jpg/640px-080103_hakkai_fuji.jpg"},
+  {name:"Ayers Rock (Uluru), Australia",lat:-25.3444,lng:131.0369,hint:"Il monolite sacro degli aborigeni",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Uluru%2C_helicopter_view%2C_cropped.jpg/640px-Uluru%2C_helicopter_view%2C_cropped.jpg"},
+  {name:"Tongariro, Nuova Zelanda",lat:-39.1548,lng:175.6320,hint:"Vulcano usato come Mordor in LOTR",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Mount_Ngauruhoe_2012.jpg/640px-Mount_Ngauruhoe_2012.jpg"},
+  {name:"Palazzo Reale di Bangkok",lat:13.7500,lng:100.4913,hint:"Tempio del Buddha di Smeraldo",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Grand_Palace%2C_Bangkok%2C_2013.jpg/640px-Grand_Palace%2C_Bangkok%2C_2013.jpg"},
+  {name:"Isola di Pasqua, Moai",lat:-27.1218,lng:-109.3496,hint:"Statue monolitiche nel Pacifico",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Moai_Rano_raraku.jpg/640px-Moai_Rano_raraku.jpg"},
+  {name:"Lago Titicaca, Bolivia/Perù",lat:-15.9254,lng:-69.3354,hint:"Il lago navigabile più alto del mondo",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Lake_titicaca.jpg/640px-Lake_titicaca.jpg"},
+  {name:"Cataratte di Iguazù, Argentina",lat:-25.6953,lng:-54.4367,hint:"Le cascate più grandi del mondo",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Iguazu_Argentina_Cataratas03.jpg/640px-Iguazu_Argentina_Cataratas03.jpg"},
+  {name:"Serengeti, Tanzania",lat:-2.3333,lng:34.8333,hint:"La savana africana della migrazione",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Serengeti_Elefanten.jpg/640px-Serengeti_Elefanten.jpg"},
+  {name:"Zanzibar, Tanzania",lat:-6.1522,lng:39.1959,hint:"Isola delle spezie nell'Oceano Indiano",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Zanzibar_City.jpg/640px-Zanzibar_City.jpg"},
+  {name:"Monastero di Meteora, Grecia",lat:39.7217,lng:21.6306,hint:"Monasteri su pinnacoli rocciosi",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Meteora_-_Moni_Agiou_Nikolaou_%28pixinn.net%29.jpg/640px-Meteora_-_Moni_Agiou_Nikolaou_%28pixinn.net%29.jpg"},
+  {name:"Fjordi islandesi, Vatnajökull",lat:64.4128,lng:-16.9764,hint:"Il più grande ghiacciaio d'Europa",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Vatnajokull_glacier.jpg/640px-Vatnajokull_glacier.jpg"},
+  {name:"Kuala Lumpur, Torri Petronas",lat:3.1579,lng:101.7116,hint:"Le torri gemelle più alte del mondo (dal 1998)",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Petronas_Tower_3.jpg/400px-Petronas_Tower_3.jpg"},
+  {name:"Amalfi, Costa Amalfitana",lat:40.6333,lng:14.6024,hint:"Costa patrimonio UNESCO in Italia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Positano-2013%281%29.jpg/640px-Positano-2013%281%29.jpg"},
+  {name:"Versailles, Reggia",lat:48.8049,lng:2.1204,hint:"Il palazzo dei re di Francia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Palace_of_Versailles%2C_Park_side.jpg/640px-Palace_of_Versailles%2C_Park_side.jpg"},
+  {name:"Colca Canyon, Perù",lat:-15.5167,lng:-71.8500,hint:"Uno dei canyon più profondi del mondo",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Colca_canyon_flying_condors.jpg/640px-Colca_canyon_flying_condors.jpg"},
+  {name:"Ha Long Bay, Vietnam",lat:20.9101,lng:107.1839,hint:"Bahia con migliaia di isole carsiche",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Ha_long_bay.jpg/640px-Ha_long_bay.jpg"},
+  {name:"Tempio di Kyoto, Kinkaku-ji",lat:35.0394,lng:135.7292,hint:"Il Padiglione d'Oro del Giappone",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Kinkaku-ji_Temple%2C_Kyoto%2C_Japan.jpg/640px-Kinkaku-ji_Temple%2C_Kyoto%2C_Japan.jpg"},
+  {name:"Cinque Terre, Liguria",lat:44.1461,lng:9.6439,hint:"Cinque borghi colorati sulla riviera ligure",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Cinque_Terre_-_Vernazza_-_View_from_above_%28pixinn.net%29.jpg/640px-Cinque_Terre_-_Vernazza_-_View_from_above_%28pixinn.net%29.jpg"},
+  {name:"Borobudur, Indonesia",lat:-7.6079,lng:110.2038,hint:"Il più grande tempio buddista del mondo",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Borobudur-Nothwest-view.jpg/640px-Borobudur-Nothwest-view.jpg"},
+  {name:"Palau, Micronesia",lat:7.5000,lng:134.5000,hint:"Paradiso subacqueo nell'Oceano Pacifico",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Palau_-_Flickr_-_DIVA007_%283%29.jpg/640px-Palau_-_Flickr_-_DIVA007_%283%29.jpg"},
+  {name:"Marrakech, Djemaa el-Fna",lat:31.6258,lng:-7.9891,hint:"La piazza più famosa del Marocco",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Djema_el_Fna.jpg/640px-Djema_el_Fna.jpg"},
+  {name:"Rio Carnevale, Sambódromo",lat:-22.9122,lng:-43.1755,hint:"Il carnevale più famoso del mondo",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Rio-Carnival-Sabas.jpg/640px-Rio-Carnival-Sabas.jpg"},
+  {name:"Alpi Svizzere, Matterhorn",lat:45.9763,lng:7.6586,hint:"Il monte simbolo della Svizzera",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Matterhorn_as_seen_from_Zermatt.jpg/640px-Matterhorn_as_seen_from_Zermatt.jpg"},
+  {name:"Hierve el Agua, Messico",lat:16.8658,lng:-96.2756,hint:"Cascate pietrificate in Oaxaca",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Hierve_el_Agua%2C_Oaxaca.jpg/640px-Hierve_el_Agua%2C_Oaxaca.jpg"},
+  {name:"Wadi Rum, Giordania",lat:29.5755,lng:35.4228,hint:"Il 'Valle della Luna' nel deserto",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Wadi_Rum_4.jpg/640px-Wadi_Rum_4.jpg"},
+  {name:"Dubrovnik, Croazia",lat:42.6507,lng:18.0944,hint:"La Perla dell'Adriatico",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Dubrovnik_Old_Town_walls_Aug_2020_photo_by_Victor_M._Vicente_Selvas.jpg/640px-Dubrovnik_Old_Town_walls_Aug_2020_photo_by_Victor_M._Vicente_Selvas.jpg"},
+  {name:"Cappadocia, Turchia",lat:38.6431,lng:34.8289,hint:"Paesaggio lunare con mongolfiere",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Cappadocia_Landscape.jpg/640px-Cappadocia_Landscape.jpg"},
+  {name:"Quebrada de Humahuaca, Argentina",lat:-23.2040,lng:-65.3500,hint:"Valle multicolore patrimonio UNESCO",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Quebrada_de_Humahuaca%2C_Cerro_de_Siete_Colores.jpg/640px-Quebrada_de_Humahuaca%2C_Cerro_de_Siete_Colores.jpg"},
+];
+
+/* ═══════════════════════════════════════
+   UNESCO DATA  (100 siti)
+═══════════════════════════════════════ */
+const UNESCO_SITES = [
+  {name:"Colosseo",country:"Italia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Colosseo_2020.jpg/480px-Colosseo_2020.jpg",opts:["Colosseo","Circo Massimo","Foro Romano","Terme di Caracalla"],diff:"easy"},
+  {name:"Torre Eiffel",country:"Francia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Sights_of_Paris_FI.jpg/480px-Sights_of_Paris_FI.jpg",opts:["Torre Eiffel","Arc de Triomphe","Sacré-Cœur","Torre di Montparnasse"],diff:"easy"},
+  {name:"Machu Picchu",country:"Perù",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Machu_Picchu%2C_Peru.jpg/480px-Machu_Picchu%2C_Peru.jpg",opts:["Machu Picchu","Chan Chan","Caral","Chavín de Huántar"],diff:"easy"},
+  {name:"Taj Mahal",country:"India",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Taj_Mahal%2C_Agra%2C_India_edit3.jpg/480px-Taj_Mahal%2C_Agra%2C_India_edit3.jpg",opts:["Taj Mahal","Forte Rosso","Qutb Minar","Ajanta"],diff:"easy"},
+  {name:"Piramidi di Giza",country:"Egitto",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/All_Gizah_Pyramids.jpg/480px-All_Gizah_Pyramids.jpg",opts:["Piramidi di Giza","Abu Simbel","Tempio di Karnak","Piramide di Saqqara"],diff:"easy"},
+  {name:"Angkor Wat",country:"Cambogia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Angkor_Wat%2C_Camboya%2C_2013-08-16%2C_DD_50.jpg/480px-Angkor_Wat%2C_Camboya%2C_2013-08-16%2C_DD_50.jpg",opts:["Angkor Wat","Borobudur","Bagan","Prambanan"],diff:"easy"},
+  {name:"Acropoli di Atene",country:"Grecia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/The_Parthenon_in_Athens.jpg/480px-The_Parthenon_in_Athens.jpg",opts:["Acropoli di Atene","Delfi","Olimpia","Micene"],diff:"easy"},
+  {name:"Chichén Itzá",country:"Messico",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Chichen_Itza_3.jpg/480px-Chichen_Itza_3.jpg",opts:["Chichén Itzá","Teotihuacan","Palenque","Monte Albán"],diff:"easy"},
+  {name:"Stonehenge",country:"Regno Unito",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Stonehenge2007_07_30.jpg/480px-Stonehenge2007_07_30.jpg",opts:["Stonehenge","Avebury","Skara Brae","Hadrian's Wall"],diff:"easy"},
+  {name:"Petra",country:"Giordania",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Petra_Jordan_BW_21.JPG/480px-Petra_Jordan_BW_21.JPG",opts:["Petra","Jerash","Umm Qais","Ajloun"],diff:"easy"},
+  {name:"Grande Barriera Corallina",country:"Australia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Great_Barrier_Reef_007.jpg/480px-Great_Barrier_Reef_007.jpg",opts:["Grande Barriera Corallina","Ningaloo","Shark Bay","Lord Howe Island"],diff:"easy"},
+  {name:"Yosemite National Park",country:"USA",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Tunnel_View%2C_Yosemite_Valley%2C_Yosemite_NP_-_Diliff.jpg/480px-Tunnel_View%2C_Yosemite_Valley%2C_Yosemite_NP_-_Diliff.jpg",opts:["Yosemite","Yellowstone","Grand Canyon","Everglades"],diff:"easy"},
+  {name:"Sagrada Familia",country:"Spagna",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Sagrada_Familia_01.jpg/480px-Sagrada_Familia_01.jpg",opts:["Sagrada Familia","Alhambra","Guggenheim Bilbao","Catedral de Burgos"],diff:"easy"},
+  {name:"Monte Fuji",country:"Giappone",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/080103_hakkai_fuji.jpg/480px-080103_hakkai_fuji.jpg",opts:["Monte Fuji","Monte Koya","Nikkō","Himeji"],diff:"easy"},
+  {name:"Hagia Sophia",country:"Turchia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Hagia_Sophia_Istanbul_2023.jpg/480px-Hagia_Sophia_Istanbul_2023.jpg",opts:["Hagia Sophia","Topkapı","Sultanahmet","Efeso"],diff:"easy"},
+  {name:"Alhambra",country:"Spagna",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Alhambra_Granada_Spain.jpeg/480px-Alhambra_Granada_Spain.jpeg",opts:["Alhambra","Alcazar di Siviglia","Sagrada Familia","Palacio Real"],diff:"medium"},
+  {name:"Mont Saint-Michel",country:"Francia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Mont_Saint-Michel_from_the_west.jpg/480px-Mont_Saint-Michel_from_the_west.jpg",opts:["Mont Saint-Michel","Carcassonne","Chartres","Vézelay"],diff:"medium"},
+  {name:"Borobudur",country:"Indonesia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Borobudur-Nothwest-view.jpg/480px-Borobudur-Nothwest-view.jpg",opts:["Borobudur","Prambanan","Angkor Wat","Bagan"],diff:"medium"},
+  {name:"Castello di Neuschwanstein",country:"Germania",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Schloss_Neuschwanstein_2013.jpg/480px-Schloss_Neuschwanstein_2013.jpg",opts:["Neuschwanstein","Heidelberg","Hohenzollern","Wartburg"],diff:"medium"},
+  {name:"Reggia di Versailles",country:"Francia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Palace_of_Versailles%2C_Park_side.jpg/480px-Palace_of_Versailles%2C_Park_side.jpg",opts:["Versailles","Fontainebleau","Louvre","Chambord"],diff:"medium"},
+  {name:"Canale Grande di Venezia",country:"Italia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Canale_Grande_Bridge_of_sighs.jpg/480px-Canale_Grande_Bridge_of_sighs.jpg",opts:["Venezia","Amsterdam","Bruges","Copenaghen"],diff:"easy"},
+  {name:"Cinque Terre",country:"Italia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Cinque_Terre_-_Vernazza_-_View_from_above_%28pixinn.net%29.jpg/480px-Cinque_Terre_-_Vernazza_-_View_from_above_%28pixinn.net%29.jpg",opts:["Cinque Terre","Costiera Amalfitana","Genova","Portofino"],diff:"medium"},
+  {name:"Meteora",country:"Grecia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Meteora_-_Moni_Agiou_Nikolaou_%28pixinn.net%29.jpg/480px-Meteora_-_Moni_Agiou_Nikolaou_%28pixinn.net%29.jpg",opts:["Meteora","Monte Athos","Delfi","Olimpia"],diff:"medium"},
+  {name:"Dubrovnik, Città Vecchia",country:"Croazia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Dubrovnik_Old_Town_walls_Aug_2020_photo_by_Victor_M._Vicente_Selvas.jpg/480px-Dubrovnik_Old_Town_walls_Aug_2020_photo_by_Victor_M._Vicente_Selvas.jpg",opts:["Dubrovnik","Spalato","Trogir","Pula"],diff:"medium"},
+  {name:"Cappadocia",country:"Turchia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Cappadocia_Landscape.jpg/480px-Cappadocia_Landscape.jpg",opts:["Cappadocia","Pamukkale","Monte Nemrut","Efeso"],diff:"medium"},
+  {name:"Ha Long Bay",country:"Vietnam",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Ha_long_bay.jpg/480px-Ha_long_bay.jpg",opts:["Ha Long Bay","Hội An","Phong Nha","Mỹ Sơn"],diff:"medium"},
+  {name:"Piazza Rossa, Mosca",country:"Russia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Red_Square_Kremlin_Panorama.jpg/480px-Red_Square_Kremlin_Panorama.jpg",opts:["Piazza Rossa","Kremlino di Suzdal","Lago Baikal","Altai"],diff:"medium"},
+  {name:"Matterhorn (Zermatt)",country:"Svizzera",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Matterhorn_as_seen_from_Zermatt.jpg/480px-Matterhorn_as_seen_from_Zermatt.jpg",opts:["Matterhorn","Monte Rosa","Eiger","Monte Bianco"],diff:"medium"},
+  {name:"Geirangerfjord",country:"Norvegia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Geiranger_fjord%2C_Norway.jpg/480px-Geiranger_fjord%2C_Norway.jpg",opts:["Geirangerfjord","Sognefjord","Hardangerfjord","Lysefjord"],diff:"medium"},
+  {name:"Isola di Pasqua (Moai)",country:"Cile",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Moai_Rano_raraku.jpg/480px-Moai_Rano_raraku.jpg",opts:["Isola di Pasqua","Isole Galápagos","Bora Bora","Tikopia"],diff:"medium"},
+  {name:"Galápagos",country:"Ecuador",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Isabela_Island%2C_Galapagos.jpg/480px-Isabela_Island%2C_Galapagos.jpg",opts:["Galápagos","Isole Canarie","Hawaii","Cocos"],diff:"medium"},
+  {name:"Uluru (Ayers Rock)",country:"Australia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Uluru%2C_helicopter_view%2C_cropped.jpg/480px-Uluru%2C_helicopter_view%2C_cropped.jpg",opts:["Uluru","Devil's Marbles","Wave Rock","The Pinnacles"],diff:"medium"},
+  {name:"Cataratte Vittoria (Victoria Falls)",country:"Zimbabwe/Zambia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Victoria_Falls%2C_Zimbabwe%2C_2012.jpg/480px-Victoria_Falls%2C_Zimbabwe%2C_2012.jpg",opts:["Cataratte Vittoria","Iguazù","Niagara","Kaieteur"],diff:"medium"},
+  {name:"Serengeti",country:"Tanzania",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Serengeti_Elefanten.jpg/480px-Serengeti_Elefanten.jpg",opts:["Serengeti","Masai Mara","Etosha","Kruger"],diff:"medium"},
+  {name:"Grand Canyon",country:"USA",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Grand_Canyon_view_from_Pima_Point_2010.jpg/480px-Grand_Canyon_view_from_Pima_Point_2010.jpg",opts:["Grand Canyon","Bryce Canyon","Zion Canyon","Antelope Canyon"],diff:"medium"},
+  {name:"Teotihuacan",country:"Messico",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Teotihuacan_Promenade_of_the_Death.jpg/480px-Teotihuacan_Promenade_of_the_Death.jpg",opts:["Teotihuacan","Chichén Itzá","Palenque","Uxmal"],diff:"medium"},
+  {name:"Kinkaku-ji (Padiglione d'Oro)",country:"Giappone",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Kinkaku-ji_Temple%2C_Kyoto%2C_Japan.jpg/480px-Kinkaku-ji_Temple%2C_Kyoto%2C_Japan.jpg",opts:["Kinkaku-ji","Ginkaku-ji","Ryōan-ji","Byōdō-in"],diff:"hard"},
+  {name:"Bagan",country:"Myanmar",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Bagan_sunset.jpg/480px-Bagan_sunset.jpg",opts:["Bagan","Angkor Wat","Borobudur","Sukhothai"],diff:"hard"},
+  {name:"Pamukkale",country:"Turchia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Pamukkale_2006.jpg/480px-Pamukkale_2006.jpg",opts:["Pamukkale","Cappadocia","Monte Nemrut","Efeso"],diff:"hard"},
+  {name:"Potala Palace",country:"Tibet/Cina",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Potala_palace_Lhasa.jpg/480px-Potala_palace_Lhasa.jpg",opts:["Potala Palace","Forbidden City","Jiuzhaigou","Huangshan"],diff:"hard"},
+  {name:"Cataratte di Iguazù",country:"Argentina/Brasile",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Iguazu_Argentina_Cataratas03.jpg/480px-Iguazu_Argentina_Cataratas03.jpg",opts:["Iguazù","Niagara","Vittoria","Angel Falls"],diff:"medium"},
+  {name:"Wadi Rum",country:"Giordania",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Wadi_Rum_4.jpg/480px-Wadi_Rum_4.jpg",opts:["Wadi Rum","Wadi Musa","Wadi Araba","Wadi Dana"],diff:"hard"},
+  {name:"Lalibela (Chiese rupestri)",country:"Etiopia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Lalibela_churches.jpg/480px-Lalibela_churches.jpg",opts:["Lalibela","Aksum","Gondar","Harar"],diff:"hard"},
+  {name:"Leptis Magna",country:"Libia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Leptis_Magna_forum1.jpg/480px-Leptis_Magna_forum1.jpg",opts:["Leptis Magna","Sabratha","Cirene","Ghadames"],diff:"hard"},
+  {name:"Preah Vihear",country:"Cambogia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Prasat_Preah_Vihear_1.jpg/480px-Prasat_Preah_Vihear_1.jpg",opts:["Preah Vihear","Angkor Wat","Sambor Prei Kuk","Banteay Chhmar"],diff:"hard"},
+  {name:"Persepolis",country:"Iran",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Persepolis_-_panoramio_%282%29.jpg/480px-Persepolis_-_panoramio_%282%29.jpg",opts:["Persepolis","Pasargade","Susa","Bisotun"],diff:"hard"},
+  {name:"Timbuktu",country:"Mali",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Mosquee_djingareyber.jpg/480px-Mosquee_djingareyber.jpg",opts:["Timbuktu","Djenné","Bamako","Gao"],diff:"hard"},
+  {name:"Mohenjo-daro",country:"Pakistan",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Mohenjodaro_Sindh.jpeg/480px-Mohenjodaro_Sindh.jpeg",opts:["Mohenjo-daro","Harappa","Taxila","Lahore Fort"],diff:"hard"},
+  {name:"Butrint",country:"Albania",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Butrint_Albania.jpg/480px-Butrint_Albania.jpg",opts:["Butrint","Gjirokastra","Apollonia","Berat"],diff:"hard"},
+  {name:"Hoi An",country:"Vietnam",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Ancient_town_of_hoi_an.jpg/480px-Ancient_town_of_hoi_an.jpg",opts:["Hoi An","Hue","My Son","Ha Long"],diff:"hard"},
+  {name:"Ohrid",country:"Macedonia del Nord",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Ohrid-panorama.jpg/480px-Ohrid-panorama.jpg",opts:["Ohrid","Skopje","Bitola","Strumica"],diff:"hard"},
+  {name:"Rapa Nui (Isola di Pasqua)",country:"Cile",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Easter_Island_moai.jpg/480px-Easter_Island_moai.jpg",opts:["Rapa Nui","Chiloé","Torres del Paine","Humberstone"],diff:"hard"},
+  {name:"Palmira",country:"Siria",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Palmyra%2C_Syria%2C_before_the_war.jpg/480px-Palmyra%2C_Syria%2C_before_the_war.jpg",opts:["Palmira","Apamea","Bosra","Aleppo"],diff:"hard"},
+  {name:"Skara Brae",country:"Scozia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Skara_Brae_B.jpg/480px-Skara_Brae_B.jpg",opts:["Skara Brae","Stonehenge","Avebury","Cairnpapple"],diff:"hard"},
+  {name:"Goree Island",country:"Senegal",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Maison_des_Esclaves.jpg/480px-Maison_des_Esclaves.jpg",opts:["Gorée","James Island","Elmina","Cabo Corso"],diff:"hard"},
+  {name:"Quebrada de Humahuaca",country:"Argentina",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Quebrada_de_Humahuaca%2C_Cerro_de_Siete_Colores.jpg/480px-Quebrada_de_Humahuaca%2C_Cerro_de_Siete_Colores.jpg",opts:["Quebrada de Humahuaca","Cueva de las Manos","Valdés","Iguazù"],diff:"hard"},
+  {name:"Himeji-jo",country:"Giappone",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Himeji_Castle_The_Keep_Towers.jpg/480px-Himeji_Castle_The_Keep_Towers.jpg",opts:["Himeji-jo","Matsumoto","Edo Castle","Osaka Castle"],diff:"hard"},
+  {name:"Abu Simbel",country:"Egitto",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Abu_simbel.jpg/480px-Abu_simbel.jpg",opts:["Abu Simbel","Karnak","Luxor","Saqqara"],diff:"medium"},
+  {name:"Cueva de las Manos",country:"Argentina",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Cueva_de_las_manos.jpg/480px-Cueva_de_las_manos.jpg",opts:["Cueva de las Manos","Altamira","Lascaux","Chauvet"],diff:"hard"},
+  {name:"Pont du Gard",country:"Francia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Pont_du_Gard_Oct_2007.jpg/480px-Pont_du_Gard_Oct_2007.jpg",opts:["Pont du Gard","Viaduc de Millau","Aqueduc de Segovia","Ponte Rotto"],diff:"hard"},
+  {name:"Altamira (Grotte)",country:"Spagna",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/AltamiraBison.jpg/480px-AltamiraBison.jpg",opts:["Altamira","Lascaux","Pech Merle","Font-de-Gaume"],diff:"hard"},
+  {name:"Ravenna (Mosaici Paleocristiani)",country:"Italia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Mausoleo_di_Galla_Placidia.jpg/480px-Mausoleo_di_Galla_Placidia.jpg",opts:["Ravenna","Pompei","Herculaneum","Paestum"],diff:"hard"},
+  {name:"Delos",country:"Grecia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Delos-Agora-of-the-Italians.jpg/480px-Delos-Agora-of-the-Italians.jpg",opts:["Delos","Rodi","Creta","Samo"],diff:"hard"},
+  {name:"Kilimanjaro",country:"Tanzania",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Kilimanjaro_from_amboseli_%28edit%29.jpg/480px-Kilimanjaro_from_amboseli_%28edit%29.jpg",opts:["Kilimanjaro","Monte Kenya","Monte Camerun","Ras Dashen"],diff:"easy"},
+  {name:"Sundarbans",country:"Bangladesh/India",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Sundarbans_01.jpg/480px-Sundarbans_01.jpg",opts:["Sundarbans","Kaziranga","Jim Corbett","Manas"],diff:"hard"},
+  {name:"Valletta",country:"Malta",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Valletta_Malta_2014.jpg/480px-Valletta_Malta_2014.jpg",opts:["Valletta","La Valletta Gozo","Mdina","Marsaxlokk"],diff:"hard"},
+  {name:"Luang Prabang",country:"Laos",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Luang_Prabang_003.jpg/480px-Luang_Prabang_003.jpg",opts:["Luang Prabang","Vientiane","Pakse","Savannakhet"],diff:"hard"},
+  {name:"Tikal",country:"Guatemala",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Tikal_temple1_2006_08_11.jpg/480px-Tikal_temple1_2006_08_11.jpg",opts:["Tikal","Copán","Quiriguá","El Mirador"],diff:"hard"},
+  {name:"Diocletian's Palace, Spalato",country:"Croazia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Split_Diocletian_palace.jpg/480px-Split_Diocletian_palace.jpg",opts:["Spalato","Dubrovnik","Trogir","Pula"],diff:"hard"},
+  {name:"Sintra",country:"Portogallo",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Palacio_da_Pena_Sintra.jpg/480px-Palacio_da_Pena_Sintra.jpg",opts:["Sintra","Évora","Porto","Batalha"],diff:"medium"},
+  {name:"Bamboo Forest di Arashiyama",country:"Giappone",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Bamboo_groves_in_Arashiyama_Kyoto.jpg/480px-Bamboo_groves_in_Arashiyama_Kyoto.jpg",opts:["Arashiyama (Kyoto)","Nikkō","Nara","Hiroshima"],diff:"hard"},
+  {name:"Colosseo di Roma",country:"Italia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Colosseum_in_Rome-April_2007-1-_copie_2B.jpg/480px-Colosseum_in_Rome-April_2007-1-_copie_2B.jpg",opts:["Colosseo","Circo Massimo","Foro di Traiano","Pantheon"],diff:"easy"},
+  {name:"Potosi (Cerro Rico)",country:"Bolivia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Cerro_Rico%2C_Potos%C3%AD.jpg/480px-Cerro_Rico%2C_Potos%C3%AD.jpg",opts:["Potosí","Sucre","Oruro","Tiwanaku"],diff:"hard"},
+  {name:"Sagarmatha (Everest) NP",country:"Nepal",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Everest_North_Face_toward_Base_Camp_Tibet_Luca_Galuzzi_2006.jpg/480px-Everest_North_Face_toward_Base_Camp_Tibet_Luca_Galuzzi_2006.jpg",opts:["Everest","K2","Kangchenjunga","Annapurna"],diff:"medium"},
+  {name:"Carcassonne",country:"Francia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Carcassonne_Cite_Medievale.jpg/480px-Carcassonne_Cite_Medievale.jpg",opts:["Carcassonne","Avignone","Aigues-Mortes","Nîmes"],diff:"medium"},
+  {name:"Yellowstone",country:"USA",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/GrandPrismaticSpring09_adjust.jpg/480px-GrandPrismaticSpring09_adjust.jpg",opts:["Yellowstone","Yosemite","Grand Canyon","Everglades"],diff:"medium"},
+  {name:"Patagonia, Torres del Paine",country:"Cile",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Torres_del_Paine.jpg/480px-Torres_del_Paine.jpg",opts:["Torres del Paine","Los Glaciares","Perito Moreno","Lauca"],diff:"medium"},
+  {name:"Samarkand",country:"Uzbekistan",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Registan_Samarkand.jpg/480px-Registan_Samarkand.jpg",opts:["Samarcanda","Bukhara","Khiva","Shakhrisabz"],diff:"hard"},
+  {name:"Medina di Fes",country:"Marocco",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Fes_el_Bali_2015.jpg/480px-Fes_el_Bali_2015.jpg",opts:["Fes","Marrakech","Chefchaouen","Meknès"],diff:"hard"},
+  {name:"Medina di Marrakech",country:"Marocco",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Jemaa_el-Fnaa_Marrakech.jpg/480px-Jemaa_el-Fnaa_Marrakech.jpg",opts:["Marrakech","Fes","Chefchaouen","Rabat"],diff:"medium"},
+  {name:"Karnak",country:"Egitto",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Karnak_temple%2C_Luxor%2C_Egypt.jpg/480px-Karnak_temple%2C_Luxor%2C_Egypt.jpg",opts:["Karnak","Abu Simbel","Saqqara","Dendera"],diff:"medium"},
+  {name:"Hatra",country:"Iraq",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Hatra_-_Iraq_%28Flickr%29_%2814%29.jpg/480px-Hatra_-_Iraq_%28Flickr%29_%2814%29.jpg",opts:["Hatra","Ur","Ashur","Babylon"],diff:"hard"},
+  {name:"Aksum",country:"Etiopia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Stelae_of_Aksum.jpg/480px-Stelae_of_Aksum.jpg",opts:["Aksum","Lalibela","Gondar","Harar"],diff:"hard"},
+  {name:"Pompei",country:"Italia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Pompei_BW_2013-05-28_13-59-48.jpg/480px-Pompei_BW_2013-05-28_13-59-48.jpg",opts:["Pompei","Ercolano","Paestum","Agrigento"],diff:"easy"},
+  {name:"Agrigento (Valle dei Templi)",country:"Italia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Concordia_temple_agrigento.jpg/480px-Concordia_temple_agrigento.jpg",opts:["Agrigento","Selinunte","Segesta","Siracusa"],diff:"medium"},
+  {name:"Ilha Grande",country:"Brasile",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Ilha_Grande-Brazil.jpg/480px-Ilha_Grande-Brazil.jpg",opts:["Ilha Grande","Fernando de Noronha","Lençóis Maranhenses","Pantanal"],diff:"hard"},
+  {name:"Tsodilo",country:"Botswana",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Tsodilo_Hills_%28%C2%A9_UNESCO%29.jpg/480px-Tsodilo_Hills_%28%C2%A9_UNESCO%29.jpg",opts:["Tsodilo","Okavango","Chobe","Makgadikgadi"],diff:"hard"},
+  {name:"Polonnaruwa",country:"Sri Lanka",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Rankot_Vihara.jpg/480px-Rankot_Vihara.jpg",opts:["Polonnaruwa","Sigiriya","Anuradhapura","Kandy"],diff:"hard"},
+  {name:"Sigiriya",country:"Sri Lanka",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Sigiriya.jpg/480px-Sigiriya.jpg",opts:["Sigiriya","Polonnaruwa","Anuradhapura","Kandy"],diff:"hard"},
+  {name:"Berat",country:"Albania",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Berati.jpg/480px-Berati.jpg",opts:["Berat","Gjirokastra","Butrint","Apollonia"],diff:"hard"},
+  {name:"Göreme (Cappadocia)",country:"Turchia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Goreme_Cappadocia.jpg/480px-Goreme_Cappadocia.jpg",opts:["Göreme","Pamukkale","Nemrut","Efeso"],diff:"hard"},
+  {name:"Colline del Prosecco, Valdobbiadene",country:"Italia",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Conegliano_Valdobbiadene.jpg/480px-Conegliano_Valdobbiadene.jpg",opts:["Prosecco Hills","Langhe","Franciacorta","Chianti"],diff:"hard"},
+  {name:"Città di Bath",country:"Reino Unido",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Bath%2C_Royal_Crescent.jpg/480px-Bath%2C_Royal_Crescent.jpg",opts:["Bath","Edinburgh","Canterbury","Salisbury"],diff:"medium"},
+  {name:"Kronborg Castle",country:"Danimarca",img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Kronborg_castle.jpg/480px-Kronborg_castle.jpg",opts:["Kronborg","Frederiksborg","Christiansborg","Rosenborg"],diff:"hard"},
+];
+
+/* ═══════════════════════════════════════════════════════
+   PLAYER AVATARS & COLORS
+═══════════════════════════════════════════════════════ */
+const AVATARS   = ['🦁','🐯','🦊','🐼'];
+const PIP_COLORS= ['#e6c84a','#58a6ff','#3fb950','#bc8cff'];
+
+/* ═══════════════════════════════════════════════════════
+   MULTIPLAYER STATE
+═══════════════════════════════════════════════════════ */
+let multiplayerOn  = false;
+let players        = [];        // [{name, avatar, color}]
+let currentPlayer  = 0;         // index into players[]
+let playerScores   = [];        // [{score, correct, wrong}]
+let sharedQuestions= [];        // same pool for all players (built once)
+
+function toggleMultiplayer(){
+  multiplayerOn = !multiplayerOn;
+  const track = document.getElementById('mpTrack');
+  const label = document.getElementById('mpLabel');
+  const wrap  = document.getElementById('mpWrap');
+  track.classList.toggle('on', multiplayerOn);
+  label.classList.toggle('on', multiplayerOn);
+  label.textContent = multiplayerOn ? 'Multiplayer attivo' : 'Giocatore singolo';
+  wrap.classList.toggle('show', multiplayerOn);
+  if(multiplayerOn && document.getElementById('mpPlayerList').children.length === 0){
+    addPlayer(); addPlayer();   // start with 2 players
+  }
+}
+
+function addPlayer(){
+  const list = document.getElementById('mpPlayerList');
+  if(list.children.length >= 4) return;
+  const idx  = list.children.length;
+  const row  = document.createElement('div');
+  row.className = 'mp-player-row';
+  row.innerHTML = `
+    <div class="mp-avatar" style="background:${PIP_COLORS[idx]}22;border:2px solid ${PIP_COLORS[idx]}66;">${AVATARS[idx]}</div>
+    <input class="mp-input" type="text" placeholder="Nome giocatore ${idx+1}" maxlength="20"/>
+    ${idx >= 2 ? `<button class="mp-remove-btn" onclick="removePlayer(this)">✕</button>` : ''}
+  `;
+  list.appendChild(row);
+  document.getElementById('mpAddBtn').style.display = list.children.length >= 4 ? 'none' : 'block';
+}
+
+function removePlayer(btn){
+  btn.closest('.mp-player-row').remove();
+  rebuildPlayerRows();
+  document.getElementById('mpAddBtn').style.display = 'block';
+}
+
+function rebuildPlayerRows(){
+  const rows = document.querySelectorAll('.mp-player-row');
+  rows.forEach((row,i)=>{
+    row.querySelector('.mp-avatar').textContent = AVATARS[i];
+    row.querySelector('.mp-avatar').style.cssText = `background:${PIP_COLORS[i]}22;border:2px solid ${PIP_COLORS[i]}66;`;
+    row.querySelector('.mp-input').placeholder = `Nome giocatore ${i+1}`;
+  });
+}
+
+function buildPlayers(){
+  players = [];
+  if(!multiplayerOn){
+    players = [{name:'Tu', avatar:'🎮', color: PIP_COLORS[0]}];
+    return;
+  }
+  const rows = document.querySelectorAll('.mp-player-row');
+  rows.forEach((row,i)=>{
+    const val = row.querySelector('.mp-input').value.trim() || `Giocatore ${i+1}`;
+    players.push({name: val, avatar: AVATARS[i], color: PIP_COLORS[i]});
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   GAME STATE
+═══════════════════════════════════════════════════════ */
+let selectedCats = ['capitals','flags','populations','geography'];
+let difficulty   = 'medium';
+let numQuestions = 10;
+let questions    = [];
+let current      = 0;
+let score        = 0;
+let correct      = 0;
+let wrong        = 0;
+
+// GeoSpot
+let geoMap       = null;
+let guessMarker  = null;
+let guessLat     = null;
+let guessLng     = null;
+let hintVisible  = false;
+
+/* ═══════════════════════════════════════════════════════
+   HOME UI
+═══════════════════════════════════════════════════════ */
+function flagUrl(c){ return 'https://flagcdn.com/w160/'+c.toLowerCase()+'.png'; }
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='geospot') setTimeout(()=>{ if(geoMap) geoMap.invalidateSize(); },200);
+}
+
+function toggleCat(btn){
+  btn.classList.toggle('selected');
+  const cat = btn.dataset.cat;
+  if(btn.classList.contains('selected')){ if(!selectedCats.includes(cat)) selectedCats.push(cat); }
+  else { selectedCats = selectedCats.filter(c=>c!==cat); }
+  document.getElementById('startBtn').disabled = selectedCats.length === 0;
+}
+
+function setDiff(btn,d){
+  document.querySelectorAll('.row-3 button').forEach(b=>{ if(b.parentElement.id!=='numRow') b.classList.remove('selected'); });
+  // target only diff row buttons
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  difficulty = d;
+}
+
+function setNum(btn,n){
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  numQuestions = n;
+}
+
+function catLabel(cat){
+  return{capitals:'Capitali',flags:'Bandiere',populations:'Popolazione',geography:'Geografia',geospot:'GeoSpot',unesco:'UNESCO'}[cat]||cat;
+}
+
+function askBack(){ document.getElementById('backOverlay').classList.add('show'); }
+function closeBack(){ document.getElementById('backOverlay').classList.remove('show'); }
+function confirmBack(){
+  closeBack();
+  if(geoMap){ geoMap.remove(); geoMap=null; }
+  showScreen('home');
+}
+
+/* ═══════════════════════════════════════════════════════
+   GEOSPOT HINT
+═══════════════════════════════════════════════════════ */
+function toggleHint(){
+  hintVisible = !hintVisible;
+  document.getElementById('hintPopup').classList.toggle('show', hintVisible);
+  document.getElementById('hintBtn').style.borderColor = hintVisible ? 'var(--gold)' : '';
+  document.getElementById('hintBtn').style.color = hintVisible ? 'var(--gold)' : '';
+}
+
+/* ═══════════════════════════════════════════════════════
+   HAVERSINE
+═══════════════════════════════════════════════════════ */
+function haversineKm(lat1,lng1,lat2,lng2){
+  const R=6371, dL=(lat2-lat1)*Math.PI/180, dl=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dl/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function kmToPoints(km){
+  if(km<50)   return 1000;
+  if(km<200)  return Math.round(1000-((km-50)/150)*300);
+  if(km<500)  return Math.round(700-((km-200)/300)*300);
+  if(km<1500) return Math.round(400-((km-500)/1000)*300);
+  if(km<5000) return Math.round(100-((km-1500)/3500)*80);
+  return 20;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SHUFFLE
+═══════════════════════════════════════════════════════ */
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-.5); }
+
+/* ═══════════════════════════════════════════════════════
+   BUILD QUESTION POOL
+═══════════════════════════════════════════════════════ */
+function buildPool(){
+  let pool = [];
+  selectedCats.forEach(cat=>{
+    if(cat==='geospot'){
+      pool.push(...shuffle(GEOSPOT_PLACES).map(p=>({...p,category:'geospot',type:'geospot'})));
+    } else if(cat==='unesco'){
+      const qs = UNESCO_SITES.filter(q=>{
+        if(difficulty==='easy')   return q.diff==='easy';
+        if(difficulty==='medium') return ['easy','medium'].includes(q.diff);
+        return true;
+      });
+      pool.push(...qs.map(q=>({...q,category:'unesco',type:'unesco',q:'Di quale sito UNESCO si tratta?'})));
+    } else {
+      const qs = STD_QUESTIONS[cat].filter(q=>{
+        if(difficulty==='easy')   return q.diff==='easy';
+        if(difficulty==='medium') return ['easy','medium'].includes(q.diff);
+        return true;
+      });
+      pool.push(...qs.map(q=>({...q,category:cat,type:'std'})));
+    }
+  });
+  // deduplicate by question/name key
+  const seen = new Set();
+  pool = pool.filter(q=>{ const k=q.name||q.q; if(seen.has(k)) return false; seen.add(k); return true; });
+  return shuffle(pool).slice(0, Math.min(numQuestions, pool.length));
+}
+
+/* ═══════════════════════════════════════════════════════
+   GAME START
+═══════════════════════════════════════════════════════ */
+function startGame(){
+  buildPlayers();
+  sharedQuestions = buildPool();   // same questions for all players
+  currentPlayer   = 0;
+  playerScores    = players.map(()=>({score:0, correct:0, wrong:0}));
+
+  if(multiplayerOn){
+    showTransition();
+  } else {
+    startPlayerTurn();
+  }
+}
+
+/* ── Player transition screen ── */
+function showTransition(){
+  const p   = players[currentPlayer];
+  const ps  = playerScores[currentPlayer];
+  document.getElementById('ptAvatar').textContent = p.avatar;
+  document.getElementById('ptName').textContent   = p.name;
+  document.getElementById('ptSub').textContent    =
+    currentPlayer === 0 ? `È il tuo turno! ${sharedQuestions.length} domande ti aspettano.`
+                        : `Passa il dispositivo a ${p.name}! Preparati...`;
+
+  // show scores of players who already played
+  const scoresEl = document.getElementById('ptScores');
+  scoresEl.innerHTML = '';
+  players.slice(0, currentPlayer).forEach((pl,i)=>{
+    const chip = document.createElement('div');
+    chip.className = 'pt-score-chip';
+    chip.innerHTML = `${pl.avatar} ${pl.name}: <span>${playerScores[i].score} pt</span>`;
+    scoresEl.appendChild(chip);
+  });
+
+  showScreen('playerTransition');
+}
+
+function startPlayerTurn(){
+  // reset per-player state
+  score   = playerScores[currentPlayer].score;
+  correct = playerScores[currentPlayer].correct;
+  wrong   = playerScores[currentPlayer].wrong;
+  current = 0;
+  questions = sharedQuestions;
+  renderQuestion();
+}
+
+/* ── Update header with current player info ── */
+function updateHeader(isGeo){
+  const p  = players[currentPlayer];
+  const sc = isGeo ? 'gsScore' : 'scoreDisplay';
+  document.getElementById(sc).textContent = score;
+  if(multiplayerOn){
+    const pipId     = isGeo ? 'gsHeaderPip'     : 'headerPip';
+    const playerLbl = isGeo ? 'gsHeaderPlayer'  : 'headerPlayer';
+    const pip = document.getElementById(pipId);
+    pip.textContent = p.avatar;
+    pip.style.cssText = `background:${p.color}22;border:1px solid ${p.color};`;
+    document.getElementById(playerLbl).textContent = p.name+' · ';
+  } else {
+    document.getElementById(isGeo?'gsHeaderPip':'headerPip').textContent='';
+    document.getElementById(isGeo?'gsHeaderPlayer':'headerPlayer').textContent='';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════ */
+function renderQuestion(){
+  const q = questions[current];
+  if(q.type==='geospot') renderGeospot(q);
+  else                   renderStandard(q);
+}
+
+/* ── STANDARD ── */
+function renderStandard(q){
+  showScreen('quiz');
+  document.getElementById('qNum').textContent  = current+1;
+  document.getElementById('qTotal').textContent = '/ '+questions.length;
+  document.getElementById('progressFill').style.width = (current/questions.length*100)+'%';
+  document.getElementById('catTag').textContent = catLabel(q.category);
+  document.getElementById('questionText').textContent = q.q||'Di quale sito UNESCO si tratta?';
+  document.getElementById('feedbackMsg').className = 'feedback-msg';
+  document.getElementById('feedbackMsg').textContent = '';
+  document.getElementById('nextBtn').className = 'next-btn';
+  updateHeader(false);
+
+  const fd = document.getElementById('flagDisplay');
+  const ud = document.getElementById('unescoImgWrap');
+
+  if(q.type==='unesco'){
+    fd.className='flag-display empty'; fd.innerHTML='';
+    ud.className='unesco-img-wrap';
+    ud.innerHTML='<div class="img-loading">⏳ Caricamento immagine...</div>';
+    const img=new Image();
+    img.onload=()=>{
+      ud.innerHTML='';
+      img.style.cssText='width:100%;max-width:500px;height:230px;object-fit:cover;border-radius:10px;box-shadow:0 6px 28px rgba(0,0,0,.6);border:1px solid var(--surface2);display:block;margin:0 auto;';
+      ud.appendChild(img);
+    };
+    img.onerror=()=>{ ud.innerHTML='<div class="img-loading">Immagine non disponibile</div>'; };
+    img.src=q.img; img.alt=q.name;
+  } else if(q.flag){
+    ud.className='unesco-img-wrap empty'; ud.innerHTML='';
+    fd.className='flag-display';
+    fd.innerHTML='<img src="'+flagUrl(q.flag)+'" alt="Bandiera" loading="lazy">';
+  } else {
+    fd.className='flag-display empty'; fd.innerHTML='';
+    ud.className='unesco-img-wrap empty'; ud.innerHTML='';
+  }
+
+  const grid=document.getElementById('answersGrid');
+  grid.innerHTML='';
+  const labels=['A','B','C','D'];
+  shuffle(q.opts).forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='answer-btn';
+    btn.innerHTML='<span class="idx">'+labels[i]+'</span>'+opt;
+    btn.onclick=()=>selectAnswer(opt,q.a||q.name,q,btn);
+    grid.appendChild(btn);
+  });
+}
+
+function selectAnswer(chosen,correctA,q,btn){
+  document.querySelectorAll('.answer-btn').forEach(b=>{
+    b.disabled=true;
+    const txt=b.textContent.trim().slice(1).trim();
+    if(txt===correctA) b.classList.add('correct');
+    else if(b===btn&&chosen!==correctA) b.classList.add('wrong');
+  });
+  const pts = q.diff==='hard'?3 : q.diff==='medium'?2 : 1;
+  const fb  = document.getElementById('feedbackMsg');
+  if(chosen===correctA){
+    score+=pts; correct++;
+    fb.className='feedback-msg correct-fb show';
+    fb.textContent='Corretto! +'+pts+(pts===1?' punto':' punti');
+  } else {
+    wrong++;
+    fb.className='feedback-msg wrong-fb show';
+    fb.textContent='Sbagliato! Era: '+correctA;
+  }
+  updateHeader(false);
+  const nb=document.getElementById('nextBtn');
+  nb.className='next-btn show';
+  nb.textContent = current<questions.length-1 ? 'Prossima →' : (multiplayerOn && currentPlayer<players.length-1 ? 'Fine turno →' : 'Vedi risultati →');
+}
+
+/* ── GEOSPOT ── */
+function renderGeospot(q){
+  showScreen('geospot');
+  guessLat=null; guessLng=null; hintVisible=false;
+
+  document.getElementById('gsNum').textContent  = current+1;
+  document.getElementById('gsTotal').textContent = '/ '+questions.length;
+  document.getElementById('gsProgressFill').style.width = (current/questions.length*100)+'%';
+  document.getElementById('gsPhoto').src = q.img;
+
+  // HINT: shows only the generic hint — name is HIDDEN
+  document.getElementById('hintText').textContent = q.hint;
+  document.getElementById('hintPopup').classList.remove('show');
+  document.getElementById('hintBtn').style.borderColor='';
+  document.getElementById('hintBtn').style.color='';
+
+  document.getElementById('gsFeedback').className='feedback-msg';
+  document.getElementById('gsFeedback').textContent='';
+  document.getElementById('gsNextBtn').className='next-btn';
+  document.getElementById('guessBtn').className='guess-btn';
+  document.getElementById('guessBtn').disabled=false;
+  document.getElementById('geoResultBox').className='geo-result-box';
+  document.getElementById('mapInstruction').classList.remove('hidden');
+  updateHeader(true);
+
+  if(geoMap){ geoMap.remove(); geoMap=null; }
+  guessMarker=null;
+
+  setTimeout(()=>{
+    geoMap = L.map('geoMap',{center:[20,10],zoom:2,zoomControl:true});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(geoMap);
+    geoMap.on('click',function(e){
+      if(document.getElementById('gsNextBtn').classList.contains('show')) return;
+      guessLat=e.latlng.lat; guessLng=e.latlng.lng;
+      if(guessMarker) geoMap.removeLayer(guessMarker);
+      guessMarker=L.circleMarker([guessLat,guessLng],{radius:11,color:'var(--gold)',fillColor:'#e6c84a',fillOpacity:.9,weight:2}).addTo(geoMap);
+      document.getElementById('mapInstruction').classList.add('hidden');
+      document.getElementById('guessBtn').className='guess-btn show';
+    });
+  },100);
+}
+
+function submitGuess(){
+  if(guessLat===null) return;
+  const q   = questions[current];
+  const km  = Math.round(haversineKm(guessLat,guessLng,q.lat,q.lng));
+  const pts = kmToPoints(km);
+  score+=pts;
+  if(pts>700) correct++; else wrong++;
+
+  // reveal answer on map
+  const ansIcon=L.divIcon({html:'<div style="background:#3fb950;width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>',iconSize:[16,16],iconAnchor:[8,8]});
+  L.marker([q.lat,q.lng],{icon:ansIcon}).addTo(geoMap).bindPopup('<b>'+q.name+'</b>').openPopup();
+  L.polyline([[guessLat,guessLng],[q.lat,q.lng]],{color:'rgba(255,255,255,.45)',dashArray:'6,6',weight:2}).addTo(geoMap);
+  geoMap.fitBounds([[guessLat,guessLng],[q.lat,q.lng]],{padding:[40,40],maxZoom:6});
+
+  // show result box with NAME revealed here
+  document.getElementById('geoResultBox').className='geo-result-box show';
+  document.getElementById('geoPts').textContent=pts;
+  document.getElementById('geoDist').textContent='📍 '+q.name+' · distanza: '+km.toLocaleString()+' km';
+
+  document.getElementById('guessBtn').className='guess-btn';
+  document.getElementById('guessBtn').disabled=true;
+  updateHeader(true);
+
+  const fb=document.getElementById('gsFeedback');
+  if(pts>=700)      {fb.className='feedback-msg correct-fb show';fb.textContent='🎯 Ottimo! Eri vicinissimo!';}
+  else if(pts>=400) {fb.className='feedback-msg correct-fb show';fb.textContent='👍 Bene! Quasi lì.';}
+  else              {fb.className='feedback-msg wrong-fb show';fb.textContent='😅 Lontano! '+km.toLocaleString()+' km di distanza.';}
+
+  const nb=document.getElementById('gsNextBtn');
+  nb.className='next-btn show';
+  nb.textContent = current<questions.length-1 ? 'Prossima →' : (multiplayerOn && currentPlayer<players.length-1 ? 'Fine turno →' : 'Vedi risultati →');
+}
+
+/* ═══════════════════════════════════════════════════════
+   NEXT QUESTION
+═══════════════════════════════════════════════════════ */
+function nextQuestion(){
+  // save current player's progress
+  playerScores[currentPlayer] = {score, correct, wrong};
+
+  current++;
+  if(current < questions.length){
+    renderQuestion();
+    return;
+  }
+
+  // player finished their turn
+  if(multiplayerOn && currentPlayer < players.length-1){
+    currentPlayer++;
+    // reset local counters; sharedQuestions stays the same
+    score   = 0; correct = 0; wrong = 0;
+    showTransition();
+  } else {
+    showResults();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESULTS
+═══════════════════════════════════════════════════════ */
+function showResults(){
+  if(geoMap){ geoMap.remove(); geoMap=null; }
+
+  if(multiplayerOn){
+    // Multi-player leaderboard
+    document.getElementById('soloResults').style.display='none';
+    document.getElementById('multiResults').style.display='block';
+
+    // Sort by score desc
+    const ranked = players.map((p,i)=>({...p, ...playerScores[i], idx:i})).sort((a,b)=>b.score-a.score);
+    const maxPts = sharedQuestions.reduce((s,q)=>{
+      if(q.type==='geospot') return s+1000;
+      return s+(q.diff==='hard'?3:q.diff==='medium'?2:1);
+    },0);
+
+    const lb = document.getElementById('leaderboard');
+    lb.innerHTML = '<div class="lb-title">🏆 Classifica Finale</div>';
+    const medals=['first','second','third',''];
+    const rankSymbols=['🥇','🥈','🥉','4°'];
+    ranked.forEach((p,r)=>{
+      const pct = Math.round(p.correct/questions.length*100);
+      const row=document.createElement('div');
+      row.className='lb-row '+(medals[r]||'');
+      row.innerHTML=`
+        <div class="lb-rank ${medals[r]||''}">${rankSymbols[r]||r+1}</div>
+        <div class="lb-avatar">${p.avatar}</div>
+        <div style="flex:1">
+          <div class="lb-name">${p.name}</div>
+          <div class="lb-acc">${p.correct}✓ ${p.wrong}✗ · ${pct}% precisione</div>
+        </div>
+        <div>
+          <div class="lb-score">${p.score}</div>
+          <div class="lb-acc">/ ~${maxPts}</div>
+        </div>
+      `;
+      lb.appendChild(row);
+    });
+    showScreen('results');
+
+  } else {
+    // Solo results
+    document.getElementById('soloResults').style.display='block';
+    document.getElementById('multiResults').style.display='none';
+    const totalQ = questions.length;
+    const pct    = Math.round(correct/totalQ*100);
+    const maxPts = questions.reduce((s,q)=>{
+      if(q.type==='geospot') return s+1000;
+      return s+(q.diff==='hard'?3:q.diff==='medium'?2:1);
+    },0);
+    let emoji,label,sub;
+    if(pct>=90)      {emoji='🌍';label='Geografo Esperto!';sub='Straordinario! Conosci il mondo meglio di molti.';}
+    else if(pct>=70) {emoji='🗺️';label='Buona Conoscenza!';sub='Ottimo risultato, continua così!';}
+    else if(pct>=50) {emoji='🧭';label='Non Male!';sub="Sai qualcosa, ma c'è ancora da esplorare.";}
+    else             {emoji='📍';label='Devi Studiare!';sub="Il mondo è grande — torna a esplorarlo!";}
+    document.getElementById('resultEmoji').textContent=emoji;
+    document.getElementById('resultScore').textContent=score;
+    document.getElementById('resultTotal').textContent='su ~'+maxPts+' punti';
+    document.getElementById('resultLabel').textContent=label;
+    document.getElementById('resultSub').textContent=sub;
+    document.getElementById('statCorrect').textContent=correct;
+    document.getElementById('statWrong').textContent=wrong;
+    document.getElementById('statPct').textContent=pct+'%';
+    showScreen('results');
+  }
+}
+
+/* ── init home player setup ── */
+window.addEventListener('DOMContentLoaded',()=>{
+  // fix diff row — setDiff must only affect its own row
+  document.querySelectorAll('.row-3').forEach(row=>{
+    row.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click',function(){
+        if(this.parentElement.id==='numRow') return; // handled by setNum
+        this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+        this.classList.add('selected');
+      });
+    });
+  });
+});
+</script></body></html>
