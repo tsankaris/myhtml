@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Anime - Davide Zangari</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f0f0f;
+      color: white;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 60px 20px;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-top: 50px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 18px;
+      color: #ccc;
+      margin: 25px 0 10px;
+    }
+
+    p {
+      color: #aaa;
+      font-size: 16px;
+    }
+
+    a {
+      color: #888;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .back-link {
+      margin-top: 40px;
+      font-size: 14px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 14px;
+      margin-top: 60px;
+      border-top: 1px solid #222;
+    }
+
+    /* --- Tier list --- */
+    .tierlist {
+      margin-top: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #151515;
+    }
+
+    .tier-row {
+      display: flex;
+      min-height: 70px;
+      border-bottom: 1px solid #222;
+    }
+
+    .tier-row:last-child {
+      border-bottom: none;
+    }
+
+    .tier-label {
+      flex: 0 0 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: bold;
+      color: #0f0f0f;
+    }
+
+    .tier-S .tier-label { background: #e63946; }
+    .tier-A .tier-label { background: #f4a261; }
+    .tier-B .tier-label { background: #e9c46a; }
+    .tier-C .tier-label { background: #2a9d8f; }
+    .tier-D .tier-label { background: #6c757d; }
+    .tier-pool .tier-label { background: #3a3a3a; font-size: 16px; }
+
+    .tier-items {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 8px;
+      padding: 10px;
+      min-height: 50px;
+    }
+
+    .tier-items.drag-over {
+      background: #1e1e1e;
+    }
+
+    .tier-item {
+      background: #222;
+      color: #eee;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: grab;
+      user-select: none;
+      border: 1px solid #333;
+      white-space: nowrap;
+    }
+
+    .tier-item:active {
+      cursor: grabbing;
+    }
+
+    .tier-item.dragging {
+      opacity: 0.4;
+    }
+
+    .add-form {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .add-form input {
+      flex: 1;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .add-form button, .reset-btn, .download-btn {
+      background: #222;
+      color: #ccc;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .add-form button:hover, .reset-btn:hover, .download-btn:hover {
+      background: #333;
+      color: white;
+    }
+
+    .actions-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .download-btn {
+      background: #2a9d8f;
+      color: #fff;
+    }
+
+    .download-btn:hover {
+      background: #238b7e;
+    }
+
+    .download-hint {
+      font-size: 13px;
+      color: #888;
+      margin: 0;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #666;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>⛩️ Anime</h1>
+    <p>My personal tier lists: drag and drop the cards to order them as you prefer. If you haven't seen an anime you can move it to "unknown". The starting positions are my considerations, but you
+      can change them all, download the image .png, and send it to me to discuss them!</p>
+
+    <h2>🎬 Anime</h2>
+    <div class="tierlist" id="tierlist-anime">
+      <div class="tier-row tier-S"><div class="tier-label">S</div><div class="tier-items" data-tier="S"></div></div>
+      <div class="tier-row tier-A"><div class="tier-label">A</div><div class="tier-items" data-tier="A"></div></div>
+      <div class="tier-row tier-B"><div class="tier-label">B</div><div class="tier-items" data-tier="B"></div></div>
+      <div class="tier-row tier-C"><div class="tier-label">C</div><div class="tier-items" data-tier="C"></div></div>
+      <div class="tier-row tier-D"><div class="tier-label">D</div><div class="tier-items" data-tier="D"></div></div>
+      <div class="tier-row tier-pool"><div class="tier-label">Unknown</div><div class="tier-items" data-tier="pool"></div></div>
+    </div>
+    <div class="add-form">
+      <input type="text" id="input-anime" placeholder="Add an anime...">
+      <button onclick="addItem('anime')">Add</button>
+    </div>
+    <div class="actions-row">
+      <button class="reset-btn" onclick="resetList('anime')">Reset list</button>
+      <button class="download-btn" onclick="exportTierlist('anime', 'Anime preferiti')">📥 Save as PNG</button>
+    </div>
+    <p class="download-hint">💬 Your positions are not saved when you refresh the page! download it as .png, and share your list with your friends.</p>
+
+    <h2>🎵 Anime Soundtracks (OSTs)</h2>
+    <div class="tierlist" id="tierlist-music">
+      <div class="tier-row tier-S"><div class="tier-label">S</div><div class="tier-items" data-tier="S"></div></div>
+      <div class="tier-row tier-A"><div class="tier-label">A</div><div class="tier-items" data-tier="A"></div></div>
+      <div class="tier-row tier-B"><div class="tier-label">B</div><div class="tier-items" data-tier="B"></div></div>
+      <div class="tier-row tier-C"><div class="tier-label">C</div><div class="tier-items" data-tier="C"></div></div>
+      <div class="tier-row tier-D"><div class="tier-label">D</div><div class="tier-items" data-tier="D"></div></div>
+      <div class="tier-row tier-pool"><div class="tier-label">Unknown</div><div class="tier-items" data-tier="pool"></div></div>
+    </div>
+    <div class="add-form">
+      <input type="text" id="input-music" placeholder="Add an OST...">
+      <button onclick="addItem('music')">Add</button>
+    </div>
+    <div class="actions-row">
+      <button class="reset-btn" onclick="resetList('music')">Reset list</button>
+      <button class="download-btn" onclick="exportTierlist('music', 'Anime soundtracks')">📥 Save as PNG</button>
+    </div>
+    <p class="download-hint">💬 Your positions are not saved when you refresh the page! download it as .png, and share your list with your friends</p>
+
+    <p class="hint">Final decision?.</p>
+
+    <div class="back-link">
+      <a href="index.html">← Back to Portfolio</a>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 • Davide Zangari
+  </footer>
+
+  <script>
+    // Elementi già posizionati nelle tier di partenza (riordinabili a piacere)
+    const defaultTiers = {
+      anime: {
+        S: ["Death Note", "Naruto", "Kiseiju", "CodeGeass", "Dragonball"],
+        A: ["JoJo's Bizarre Adventure - Golden Wind", "JoJo's Bizarre Adventure - Stardust Crusaiders", "Jujutsu Kaisen", "Demon Slayer"],
+        B: ["Attack on Titans", "Steins Gate", "One Piece", "Baccano!", "Mob Psycho 100","Devilman Crybaby", "Prison School", "Zatchbell"],
+        C: ["Fullmetal Alchemist: Brotherhood", "Neon Genesis Evangelion", "Tokyo Ghoul", "One Punch Man", "DanDaDan",],
+        D: ["Cowboy Bebop", "Assassination Classroom", "Fate: stay night", "Noragami" ],
+        pool: []
+      },
+      music: {
+        S: ["Dragonball Z - Chala Head Chala", "Dragonball GT - Dan Dan Kokoro", "Cruel Angel's Thesis (Evangelion OP)", "Tokyo Ghoul - Unravel", "Death note - L's theme", "DB - Tapion's Ocarina"],
+        A: ["Naruto - Blue bird", "Sono Chi no Sadame (JoJo - Phantom Blood OP)", "Guren no Yumiya (Attack on Titan OP1)"],
+        B: ["Giorno's Theme (JoJo - Golden Wind)","Again (Fullmetal Alchemist Brotherhood OP1)","Dandadan - Otonoke" ],
+        C: ["Gurenge (Demon Slayer OP)"],
+        D: ["Tank! (Cowboy Bebop OP)"],
+        pool: []
+      }
+    };
+
+    const tierColors = { S: '#e63946', A: '#f4a261', B: '#e9c46a', C: '#2a9d8f', D: '#6c757d', pool: '#3a3a3a' };
+
+    let draggedEl = null;
+
+    function makeItem(text) {
+      const div = document.createElement('div');
+      div.className = 'tier-item';
+      div.draggable = true;
+      div.textContent = text;
+      div.addEventListener('dragstart', () => {
+        draggedEl = div;
+        div.classList.add('dragging');
+      });
+      div.addEventListener('dragend', () => {
+        div.classList.remove('dragging');
+        draggedEl = null;
+      });
+      return div;
+    }
+
+    function setupDropzone(zone) {
+      zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('drag-over');
+      });
+      zone.addEventListener('dragleave', () => {
+        zone.classList.remove('drag-over');
+      });
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        if (draggedEl) {
+          zone.appendChild(draggedEl);
+        }
+      });
+    }
+
+    function initList(key) {
+      const tierlist = document.getElementById('tierlist-' + key);
+      tierlist.querySelectorAll('.tier-items').forEach(zone => {
+        zone.innerHTML = '';
+        const tier = zone.dataset.tier;
+        defaultTiers[key][tier].forEach(name => zone.appendChild(makeItem(name)));
+        setupDropzone(zone);
+      });
+    }
+
+    function addItem(key) {
+      const input = document.getElementById('input-' + key);
+      const value = input.value.trim();
+      if (!value) return;
+      const poolZone = document.querySelector('#tierlist-' + key + ' .tier-items[data-tier="pool"]');
+      poolZone.appendChild(makeItem(value));
+      input.value = '';
+    }
+
+    function resetList(key) {
+      initList(key);
+    }
+
+    initList('anime');
+    initList('music');
+
+    ['input-anime', 'input-music'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          addItem(id.replace('input-', ''));
+        }
+      });
+    });
+
+    // --- Esportazione PNG ---
+    function wrapItems(ctx, items, maxWidth) {
+      const gap = 10;
+      const paddingX = 14;
+      const itemHeight = 34;
+      const lineGap = 10;
+      const lines = [[]];
+      let curWidth = 0;
+      items.forEach(text => {
+        const w = ctx.measureText(text).width + paddingX * 2;
+        if (curWidth + w + gap > maxWidth && lines[lines.length - 1].length > 0) {
+          lines.push([]);
+          curWidth = 0;
+        }
+        lines[lines.length - 1].push({ text, width: w });
+        curWidth += w + gap;
+      });
+      return { lines, itemHeight, lineGap, gap, paddingX };
+    }
+
+    function exportTierlist(key, title) {
+      const tierlist = document.getElementById('tierlist-' + key);
+      const order = ['S', 'A', 'B', 'C', 'D', 'pool'];
+      const rowsData = order.map(t => {
+        const zone = tierlist.querySelector('.tier-items[data-tier="' + t + '"]');
+        const items = Array.from(zone.children).map(el => el.textContent);
+        return { label: t === 'pool' ? '?' : t, color: tierColors[t], items };
+      }).filter(r => r.items.length > 0 || r.label !== '?');
+
+      const width = 1000;
+      const labelWidth = 90;
+      const sidePadding = 25;
+      const itemsAreaWidth = width - labelWidth - sidePadding * 2 - 20;
+      const titleHeight = 90;
+      const footerHeight = 50;
+      const rowPaddingV = 16;
+
+      // canvas temporaneo per misurare il testo
+      const measureCanvas = document.createElement('canvas');
+      const mctx = measureCanvas.getContext('2d');
+      mctx.font = '14px -apple-system, Arial, sans-serif';
+
+      const layouts = rowsData.map(row => {
+        const wrapped = wrapItems(mctx, row.items, itemsAreaWidth);
+        const numLines = Math.max(wrapped.lines.length, 1);
+        const rowHeight = Math.max(70, numLines * (wrapped.itemHeight + wrapped.lineGap) + rowPaddingV);
+        return { ...row, wrapped, rowHeight };
+      });
+
+      const totalRowsHeight = layouts.reduce((sum, r) => sum + r.rowHeight, 0);
+      const totalHeight = titleHeight + totalRowsHeight + footerHeight + sidePadding;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = totalHeight;
+      const ctx = canvas.getContext('2d');
+
+      // sfondo
+      ctx.fillStyle = '#0f0f0f';
+      ctx.fillRect(0, 0, width, totalHeight);
+
+      // titolo
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 30px -apple-system, Arial, sans-serif';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(title, sidePadding, 45);
+
+      ctx.fillStyle = '#888888';
+      ctx.font = '14px -apple-system, Arial, sans-serif';
+      const dateStr = new Date().toLocaleDateString('it-IT');
+      ctx.fillText('My tier list - ' + dateStr, sidePadding, 68);
+
+      // contenitore tierlist
+      const containerX = sidePadding;
+      const containerY = titleHeight;
+      const containerWidth = width - sidePadding * 2;
+      ctx.fillStyle = '#151515';
+      ctx.fillRect(containerX, containerY, containerWidth, totalRowsHeight);
+
+      let y = containerY;
+      layouts.forEach(row => {
+        // etichetta
+        ctx.fillStyle = row.color;
+        ctx.fillRect(containerX, y, labelWidth, row.rowHeight);
+        ctx.fillStyle = '#0f0f0f';
+        ctx.font = 'bold 24px -apple-system, Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(row.label, containerX + labelWidth / 2, y + row.rowHeight / 2);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+
+        // separatore
+        ctx.strokeStyle = '#222222';
+        ctx.beginPath();
+        ctx.moveTo(containerX, y + row.rowHeight);
+        ctx.lineTo(containerX + containerWidth, y + row.rowHeight);
+        ctx.stroke();
+
+        // card degli elementi
+        const { lines, itemHeight, lineGap, gap, paddingX } = row.wrapped;
+        let lineY = y + rowPaddingV / 2;
+        lines.forEach(line => {
+          let x = containerX + labelWidth + 15;
+          line.forEach(item => {
+            const boxX = x;
+            const boxY = lineY;
+            const boxW = item.width;
+            const boxH = itemHeight;
+            const radius = 8;
+
+            ctx.fillStyle = '#222222';
+            ctx.strokeStyle = '#333333';
+            ctx.beginPath();
+            ctx.moveTo(boxX + radius, boxY);
+            ctx.arcTo(boxX + boxW, boxY, boxX + boxW, boxY + boxH, radius);
+            ctx.arcTo(boxX + boxW, boxY + boxH, boxX, boxY + boxH, radius);
+            ctx.arcTo(boxX, boxY + boxH, boxX, boxY, radius);
+            ctx.arcTo(boxX, boxY, boxX + boxW, boxY, radius);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#eeeeee';
+            ctx.font = '14px -apple-system, Arial, sans-serif';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(item.text, boxX + paddingX, boxY + boxH / 2);
+
+            x += boxW + gap;
+          });
+          lineY += itemHeight + lineGap;
+        });
+
+        y += row.rowHeight;
+      });
+
+      // footer / watermark
+      ctx.fillStyle = '#555555';
+      ctx.font = '12px -apple-system, Arial, sans-serif';
+      ctx.fillText('Generated by tsankaris.github.io/myhtml/ - davidezangari93@gmail.com', sidePadding, totalHeight - 20);
+
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = key + '-tierlist.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    }
+  </script>
+</body>
+</html>
