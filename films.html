@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Films & Reading - Davide Zangari</title>
+  <title>Films - Davide Zangari</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
+body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       background: #0f0f0f;
@@ -14,7 +14,7 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 1000px;
       margin: auto;
       padding: 60px 20px;
     }
@@ -26,27 +26,20 @@
 
     h2 {
       font-size: 28px;
-      margin-top: 40px;
+      margin-top: 50px;
       border-bottom: 1px solid #222;
       padding-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 18px;
+      color: #ccc;
+      margin: 25px 0 10px;
     }
 
     p {
       color: #aaa;
       font-size: 16px;
-    }
-
-    .film {
-      background: #151515;
-      padding: 20px;
-      border-radius: 12px;
-      margin: 15px 0;
-      border-left: 4px solid #d41159;
-    }
-
-    .film strong {
-      color: #fff;
-      font-size: 18px;
     }
 
     a {
@@ -72,15 +65,537 @@
       margin-top: 60px;
       border-top: 1px solid #222;
     }
+
+    /* --- Tier list --- */
+    .tierlist {
+      margin-top: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #151515;
+    }
+
+    .tier-row {
+      display: flex;
+      min-height: 70px;
+      border-bottom: 1px solid #222;
+    }
+
+    .tier-row:last-child {
+      border-bottom: none;
+    }
+
+    .tier-label {
+      flex: 0 0 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: bold;
+      color: #0f0f0f;
+    }
+
+    .tier-S .tier-label { background: #e63946; }
+    .tier-A .tier-label { background: #f4a261; }
+    .tier-B .tier-label { background: #e9c46a; }
+    .tier-C .tier-label { background: #2a9d8f; }
+    .tier-D .tier-label { background: #6c757d; }
+    .tier-pool .tier-label { background: #3a3a3a; font-size: 16px; }
+
+    .tier-items {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 8px;
+      padding: 10px;
+      min-height: 50px;
+    }
+
+    .tier-items.drag-over {
+      background: #1e1e1e;
+    }
+
+    .tier-item {
+      background: #222;
+      color: #eee;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: grab;
+      user-select: none;
+      border: 1px solid #333;
+      white-space: nowrap;
+    }
+
+    .tier-item:active {
+      cursor: grabbing;
+    }
+
+    .tier-item.dragging {
+      opacity: 0.4;
+    }
+
+    .tier-item.drag-ghost {
+      position: fixed;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0.9;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+      transform: scale(1.05);
+    }
+
+    .tier-item {
+      touch-action: none;
+    }
+
+    .add-form {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .add-form input {
+      flex: 1;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .add-form button, .reset-btn, .download-btn {
+      background: #222;
+      color: #ccc;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .add-form button:hover, .reset-btn:hover, .download-btn:hover {
+      background: #333;
+      color: white;
+    }
+
+    .actions-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .download-btn {
+      background: #2a9d8f;
+      color: #fff;
+    }
+
+    .download-btn:hover {
+      background: #238b7e;
+    }
+
+    .download-hint {
+      font-size: 13px;
+      color: #888;
+      margin: 0;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #666;
+      margin-top: 10px;
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <h1>🎬 Films & Reading</h1>
-    <p>Stories that captivate, challenge, and inspire</p>
+    <h1>🎬 Movies</h1>
+    <p>My personal tier lists: drag and drop the cards to order them as you prefer. If you haven't seen a movie you can move it to "unknown". The starting positions are my considerations, but you
+      can change them all, download the image .png, and send it to me to discuss them!</p>
 
-    <h2>Favorite Films, Anime and TV shows</h2>
+    <h2>🎬 Movies Tier list</h2>
+    <p>Notice that I like all the movies I put here, I suggest watch them all!</p>
+    <div class="tierlist" id="tierlist-movie">
+      <div class="tier-row tier-S"><div class="tier-label">S</div><div class="tier-items" data-tier="S"></div></div>
+      <div class="tier-row tier-A"><div class="tier-label">A</div><div class="tier-items" data-tier="A"></div></div>
+      <div class="tier-row tier-B"><div class="tier-label">B</div><div class="tier-items" data-tier="B"></div></div>
+      <div class="tier-row tier-C"><div class="tier-label">C</div><div class="tier-items" data-tier="C"></div></div>
+      <div class="tier-row tier-D"><div class="tier-label">D</div><div class="tier-items" data-tier="D"></div></div>
+      <div class="tier-row tier-pool"><div class="tier-label">Unknown</div><div class="tier-items" data-tier="pool"></div></div>
+    </div>
+    <div class="add-form">
+      <input type="text" id="input-movie" placeholder="Add a movie...">
+      <button onclick="addItem('movie')">Add</button>
+    </div>
+    <div class="actions-row">
+      <button class="reset-btn" onclick="resetList('movie')">Original list</button>
+      <button class="clear-btn" onclick="clearAll('movie')">🗑️ Remove all</button>
+      <button class="download-btn" onclick="exportTierlist('movie', 'Favourite movies')">📥 Save as PNG</button>
+    </div>
+    <p class="download-hint">💬 Your positions are not saved when you refresh the page! download it as .png, and share your list with your friends.</p>
+
+    <h2>🎥 TV series</h2>
+    <div class="tierlist" id="tierlist-tv">
+      <div class="tier-row tier-S"><div class="tier-label">S</div><div class="tier-items" data-tier="S"></div></div>
+      <div class="tier-row tier-A"><div class="tier-label">A</div><div class="tier-items" data-tier="A"></div></div>
+      <div class="tier-row tier-B"><div class="tier-label">B</div><div class="tier-items" data-tier="B"></div></div>
+      <div class="tier-row tier-C"><div class="tier-label">C</div><div class="tier-items" data-tier="C"></div></div>
+      <div class="tier-row tier-D"><div class="tier-label">D</div><div class="tier-items" data-tier="D"></div></div>
+      <div class="tier-row tier-pool"><div class="tier-label">Unknown</div><div class="tier-items" data-tier="pool"></div></div>
+    </div>
+    <div class="add-form">
+      <input type="text" id="input-tv" placeholder="Add a TV series...">
+      <button onclick="addItem('tv')">Add</button>
+    </div>
+    <div class="actions-row">
+      <button class="reset-btn" onclick="resetList('tv')">Original list</button>
+      <button class="clear-btn" onclick="clearAll('tv')">🗑️ Remove all</button>
+      <button class="download-btn" onclick="exportTierlist('TV series', 'Favourites tv shows')">📥 Save as PNG</button>
+    </div>
+    <p class="download-hint">💬 Your positions are not saved when you refresh the page! download it as .png, and share your list with your friends</p>
+
+    <p class="hint">Final decision?.</p>
+
+  <script>
+    // Elementi già posizionati nelle tier di partenza (riordinabili a piacere)
+    const defaultTiers = {
+      movie: {
+        S: ["The voice of Hind Rajab", "Odio l'estate", "The host", "Shutter Island", "Zodiac", "Seven", "Snowpiercer", "Bugonia", "The dictator", "Schindler's list", "Hachiko", "The great dictator"],
+        A: ["Donnie Darko", "The prestige", "Now you see me", "I am legend", "Project Mary Hail", "Il pianista", "Rocky", "The green mile", "V for Vendetta", "Never back down", "Meet the parents", "I cento passi" ],
+        B: ["The interview", "Ex machina", "Fight club", "Suburra", "Source Code","Perfetti Sconosciuti", "Quo Vado", "Limitless", "The conjuring","12 years a slave", "True story", "The departed", "12 Monkeys", "Blackkklansman", "Eyes wide shut", "Broken rage", "Harry Potter", "Everything, everywhere all at once", "The crow"],
+        C: ["Interstellar", "The wolf of wall street", "The platform", "Whatever works", "Coach Carter","The shawshank redemption", "Warrior", "Forrest Gump", "The silence of the lambs", "L.A. Confidential", "Don't look up", "Flight", "Freedom Writers", "World war z", "Knives out", "8 mile"],
+        D: ["21", "Eurotrip", "Eternal sunshine of the spotless mind", "In time","Silver linings playbook","300", "Edge of tomorrow", "The fighter", "Joker","Intouchables", "Gladiator", "Parasite", "Creed","The ugly stepsister", "Material love","Okja" ],
+        pool: []
+      },
+      tv: {
+        S: ["Chernobyl", "Breaking bad", "Games of thrones", "Stranger Things", "The office", "How I met your mother", "The trial of the Chicago 7"],
+        A: ["22.11.63", "Freeks and Geeks", "Friends", "Suburra", "3%", "3 body problem"],
+        B: ["Sex education","When they see us","Narcos","Black mirror","La casa de papel", "Mindhunter", "The queen's gambit","Baby reindeer", "Better call Saul" ],
+        C: ["Squid game", "Elite","Rick and morty", "Bodyguard", "American vandal","Between","The last of us", "Limitless", "Maniac"],
+        D: ["Fleabag", "You", "Wednesday", "The umbrella academy", "13 reasons why", "Big mouth", "Love, deaths and robots", "Ragnarok", "The end of the fucking world", "The sandman", "The witcher", "Lovesick", "How to sell drugs online", "The young pope", "Sicilia express"],
+        pool: []
+      }
+    };
+
+    const tierColors = { S: '#e63946', A: '#f4a261', B: '#e9c46a', C: '#2a9d8f', D: '#6c757d', pool: '#3a3a3a' };
+
+    // --- Drag & drop basato su Pointer Events (funziona con mouse E touch) ---
+    let draggedEl = null;
+    let ghostEl = null;
+    let currentDropZone = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let dragStarted = false;
+    const DRAG_THRESHOLD = 6; // px di movimento prima di considerarlo un drag
+
+    function allDropZones() {
+      return document.querySelectorAll('.tier-items');
+    }
+
+    function clearDropHighlights() {
+      allDropZones().forEach(z => z.classList.remove('drag-over'));
+    }
+
+    function makeItem(text) {
+      const div = document.createElement('div');
+      div.className = 'tier-item';
+      div.textContent = text;
+
+      div.addEventListener('pointerdown', (e) => {
+        // solo bottone sinistro per il mouse
+        if (e.button !== undefined && e.button !== 0) return;
+        draggedEl = div;
+        dragStarted = false;
+        pointerStartX = e.clientX;
+        pointerStartY = e.clientY;
+        e.preventDefault();
+      });
+
+      return div;
+    }
+
+    function startDrag(e) {
+      dragStarted = true;
+      draggedEl.classList.add('dragging');
+
+      const rect = draggedEl.getBoundingClientRect();
+      ghostEl = draggedEl.cloneNode(true);
+      ghostEl.classList.add('drag-ghost');
+      ghostEl.style.width = rect.width + 'px';
+      ghostEl.style.left = rect.left + 'px';
+      ghostEl.style.top = rect.top + 'px';
+      document.body.appendChild(ghostEl);
+
+      moveGhost(e);
+    }
+
+    function moveGhost(e) {
+      if (!ghostEl) return;
+      const rect = draggedEl.getBoundingClientRect();
+      const offsetX = pointerStartX - rect.left;
+      const offsetY = pointerStartY - rect.top;
+      ghostEl.style.left = (e.clientX - offsetX) + 'px';
+      ghostEl.style.top = (e.clientY - offsetY) + 'px';
+    }
+
+    function findDropZoneAt(x, y) {
+      if (ghostEl) ghostEl.style.display = 'none';
+      const el = document.elementFromPoint(x, y);
+      if (ghostEl) ghostEl.style.display = '';
+      if (!el) return null;
+      return el.closest('.tier-items');
+    }
+
+    document.addEventListener('pointermove', (e) => {
+      if (!draggedEl) return;
+
+      if (!dragStarted) {
+        const dx = e.clientX - pointerStartX;
+        const dy = e.clientY - pointerStartY;
+        if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+        startDrag(e);
+      }
+
+      moveGhost(e);
+
+      const zone = findDropZoneAt(e.clientX, e.clientY);
+      if (zone !== currentDropZone) {
+        clearDropHighlights();
+        if (zone) zone.classList.add('drag-over');
+        currentDropZone = zone;
+      }
+    });
+
+    function endDrag(e) {
+      if (!draggedEl) return;
+
+      if (dragStarted) {
+        const zone = findDropZoneAt(e.clientX, e.clientY);
+        if (zone) {
+          zone.appendChild(draggedEl);
+        }
+        draggedEl.classList.remove('dragging');
+      }
+
+      if (ghostEl) {
+        ghostEl.remove();
+        ghostEl = null;
+      }
+      clearDropHighlights();
+      draggedEl = null;
+      currentDropZone = null;
+      dragStarted = false;
+    }
+
+    document.addEventListener('pointerup', endDrag);
+    document.addEventListener('pointercancel', endDrag);
+
+    function initList(key) {
+      const tierlist = document.getElementById('tierlist-' + key);
+      tierlist.querySelectorAll('.tier-items').forEach(zone => {
+        zone.innerHTML = '';
+        const tier = zone.dataset.tier;
+        defaultTiers[key][tier].forEach(name => zone.appendChild(makeItem(name)));
+      });
+    }
+
+    function addItem(key) {
+      const input = document.getElementById('input-' + key);
+      const value = input.value.trim();
+      if (!value) return;
+      const poolZone = document.querySelector('#tierlist-' + key + ' .tier-items[data-tier="pool"]');
+      poolZone.appendChild(makeItem(value));
+      input.value = '';
+    }
+
+    function resetList(key) {
+      initList(key);
+    }
+
+    function clearAll(key) {
+      const confirmed = confirm('Are you sure you want to remove all items from this tier list?');
+      if (!confirmed) return;
+      const tierlist = document.getElementById('tierlist-' + key);
+      tierlist.querySelectorAll('.tier-items').forEach(zone => {
+        zone.innerHTML = '';
+      });
+    }
+ 
+    initList('movie');
+    initList('tv');
+ 
+    ['input-movie', 'input-tv'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          addItem(id.replace('input-', ''));
+        }
+      });
+    });
+    // --- Esportazione PNG ---
+    function wrapItems(ctx, items, maxWidth) {
+      const gap = 10;
+      const paddingX = 14;
+      const itemHeight = 34;
+      const lineGap = 10;
+      const lines = [[]];
+      let curWidth = 0;
+      items.forEach(text => {
+        const w = ctx.measureText(text).width + paddingX * 2;
+        if (curWidth + w + gap > maxWidth && lines[lines.length - 1].length > 0) {
+          lines.push([]);
+          curWidth = 0;
+        }
+        lines[lines.length - 1].push({ text, width: w });
+        curWidth += w + gap;
+      });
+      return { lines, itemHeight, lineGap, gap, paddingX };
+    }
+
+    function exportTierlist(key, title) {
+      const tierlist = document.getElementById('tierlist-' + key);
+      const order = ['S', 'A', 'B', 'C', 'D', 'pool'];
+      const rowsData = order.map(t => {
+        const zone = tierlist.querySelector('.tier-items[data-tier="' + t + '"]');
+        const items = Array.from(zone.children).map(el => el.textContent);
+        return { label: t === 'pool' ? '?' : t, color: tierColors[t], items };
+      }).filter(r => r.items.length > 0 || r.label !== '?');
+
+      const width = 1000;
+      const labelWidth = 90;
+      const sidePadding = 25;
+      const itemsAreaWidth = width - labelWidth - sidePadding * 2 - 20;
+      const titleHeight = 90;
+      const footerHeight = 50;
+      const rowPaddingV = 16;
+
+      // canvas temporaneo per misurare il testo
+      const measureCanvas = document.createElement('canvas');
+      const mctx = measureCanvas.getContext('2d');
+      mctx.font = '14px -apple-system, Arial, sans-serif';
+
+      const layouts = rowsData.map(row => {
+        const wrapped = wrapItems(mctx, row.items, itemsAreaWidth);
+        const numLines = Math.max(wrapped.lines.length, 1);
+        const rowHeight = Math.max(70, numLines * (wrapped.itemHeight + wrapped.lineGap) + rowPaddingV);
+        return { ...row, wrapped, rowHeight };
+      });
+
+      const totalRowsHeight = layouts.reduce((sum, r) => sum + r.rowHeight, 0);
+      const totalHeight = titleHeight + totalRowsHeight + footerHeight + sidePadding;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = totalHeight;
+      const ctx = canvas.getContext('2d');
+
+      // sfondo
+      ctx.fillStyle = '#0f0f0f';
+      ctx.fillRect(0, 0, width, totalHeight);
+
+      // titolo
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 30px -apple-system, Arial, sans-serif';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(title, sidePadding, 45);
+
+      ctx.fillStyle = '#888888';
+      ctx.font = '14px -apple-system, Arial, sans-serif';
+      const dateStr = new Date().toLocaleDateString('it-IT');
+      ctx.fillText('My tier list - ' + dateStr, sidePadding, 68);
+
+      // contenitore tierlist
+      const containerX = sidePadding;
+      const containerY = titleHeight;
+      const containerWidth = width - sidePadding * 2;
+      ctx.fillStyle = '#151515';
+      ctx.fillRect(containerX, containerY, containerWidth, totalRowsHeight);
+
+      let y = containerY;
+      layouts.forEach(row => {
+        // etichetta
+        ctx.fillStyle = row.color;
+        ctx.fillRect(containerX, y, labelWidth, row.rowHeight);
+        ctx.fillStyle = '#0f0f0f';
+        ctx.font = 'bold 24px -apple-system, Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(row.label, containerX + labelWidth / 2, y + row.rowHeight / 2);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+
+        // separatore
+        ctx.strokeStyle = '#222222';
+        ctx.beginPath();
+        ctx.moveTo(containerX, y + row.rowHeight);
+        ctx.lineTo(containerX + containerWidth, y + row.rowHeight);
+        ctx.stroke();
+
+        // card degli elementi
+        const { lines, itemHeight, lineGap, gap, paddingX } = row.wrapped;
+        let lineY = y + rowPaddingV / 2;
+        lines.forEach(line => {
+          let x = containerX + labelWidth + 15;
+          line.forEach(item => {
+            const boxX = x;
+            const boxY = lineY;
+            const boxW = item.width;
+            const boxH = itemHeight;
+            const radius = 8;
+
+            ctx.fillStyle = '#222222';
+            ctx.strokeStyle = '#333333';
+            ctx.beginPath();
+            ctx.moveTo(boxX + radius, boxY);
+            ctx.arcTo(boxX + boxW, boxY, boxX + boxW, boxY + boxH, radius);
+            ctx.arcTo(boxX + boxW, boxY + boxH, boxX, boxY + boxH, radius);
+            ctx.arcTo(boxX, boxY + boxH, boxX, boxY, radius);
+            ctx.arcTo(boxX, boxY, boxX + boxW, boxY, radius);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#eeeeee';
+            ctx.font = '14px -apple-system, Arial, sans-serif';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(item.text, boxX + paddingX, boxY + boxH / 2);
+
+            x += boxW + gap;
+          });
+          lineY += itemHeight + lineGap;
+        });
+
+        y += row.rowHeight;
+      });
+
+      // footer / watermark
+      ctx.fillStyle = '#555555';
+      ctx.font = '12px -apple-system, Arial, sans-serif';
+      ctx.fillText('Generated by tsankaris.github.io/myhtml/ - davidezangari93@gmail.com', sidePadding, totalHeight - 20);
+
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = key + '-tierlist.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    }
+  </script>
+</body>
+
+
+  <div class="container">
+    <h1>💭 Some considerations</h1>
+    <p>Work in progres... here I will put some considerations about my favourite movies</p>
+
+    <h2>Favorite Films and TV shows</h2>
 
     <div class="film">
       <strong>The Host (괴물)</strong>
@@ -133,8 +648,8 @@
     </div>
 
       <div class="film">
-      <strong>Death Note</strong>
-      <p>A psychological thriller anime that explores morality, power, and the consequences of playing god through an intricate cat-and-mouse game.</p>
+      <strong>The voice of Hind Rajab</strong>
+      <p>A unique experience. This movie tells the real story of a 6 years old Palestinian girl living in a war zone. No dubs and real recordings make this film stunning</p>
     </div>
 
         <div class="film">
