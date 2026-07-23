@@ -135,6 +135,19 @@
       opacity: 0.4;
     }
 
+    .tier-item.drag-ghost {
+      position: fixed;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0.9;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+      transform: scale(1.05);
+    }
+
+    .tier-item {
+      touch-action: none;
+    }
+
     .add-form {
       display: flex;
       gap: 10px;
@@ -276,40 +289,116 @@
 
     const tierColors = { S: '#e63946', A: '#f4a261', B: '#e9c46a', C: '#2a9d8f', D: '#6c757d', pool: '#3a3a3a' };
 
+    // --- Drag & drop basato su Pointer Events (funziona con mouse E touch) ---
     let draggedEl = null;
+    let ghostEl = null;
+    let currentDropZone = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let dragStarted = false;
+    const DRAG_THRESHOLD = 6; // px di movimento prima di considerarlo un drag
+
+    function allDropZones() {
+      return document.querySelectorAll('.tier-items');
+    }
+
+    function clearDropHighlights() {
+      allDropZones().forEach(z => z.classList.remove('drag-over'));
+    }
 
     function makeItem(text) {
       const div = document.createElement('div');
       div.className = 'tier-item';
-      div.draggable = true;
       div.textContent = text;
-      div.addEventListener('dragstart', () => {
+
+      div.addEventListener('pointerdown', (e) => {
+        // solo bottone sinistro per il mouse
+        if (e.button !== undefined && e.button !== 0) return;
         draggedEl = div;
-        div.classList.add('dragging');
+        dragStarted = false;
+        pointerStartX = e.clientX;
+        pointerStartY = e.clientY;
+        e.preventDefault();
       });
-      div.addEventListener('dragend', () => {
-        div.classList.remove('dragging');
-        draggedEl = null;
-      });
+
       return div;
     }
 
-    function setupDropzone(zone) {
-      zone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        zone.classList.add('drag-over');
-      });
-      zone.addEventListener('dragleave', () => {
-        zone.classList.remove('drag-over');
-      });
-      zone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        zone.classList.remove('drag-over');
-        if (draggedEl) {
+    function startDrag(e) {
+      dragStarted = true;
+      draggedEl.classList.add('dragging');
+
+      const rect = draggedEl.getBoundingClientRect();
+      ghostEl = draggedEl.cloneNode(true);
+      ghostEl.classList.add('drag-ghost');
+      ghostEl.style.width = rect.width + 'px';
+      ghostEl.style.left = rect.left + 'px';
+      ghostEl.style.top = rect.top + 'px';
+      document.body.appendChild(ghostEl);
+
+      moveGhost(e);
+    }
+
+    function moveGhost(e) {
+      if (!ghostEl) return;
+      const rect = draggedEl.getBoundingClientRect();
+      const offsetX = pointerStartX - rect.left;
+      const offsetY = pointerStartY - rect.top;
+      ghostEl.style.left = (e.clientX - offsetX) + 'px';
+      ghostEl.style.top = (e.clientY - offsetY) + 'px';
+    }
+
+    function findDropZoneAt(x, y) {
+      if (ghostEl) ghostEl.style.display = 'none';
+      const el = document.elementFromPoint(x, y);
+      if (ghostEl) ghostEl.style.display = '';
+      if (!el) return null;
+      return el.closest('.tier-items');
+    }
+
+    document.addEventListener('pointermove', (e) => {
+      if (!draggedEl) return;
+
+      if (!dragStarted) {
+        const dx = e.clientX - pointerStartX;
+        const dy = e.clientY - pointerStartY;
+        if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+        startDrag(e);
+      }
+
+      moveGhost(e);
+
+      const zone = findDropZoneAt(e.clientX, e.clientY);
+      if (zone !== currentDropZone) {
+        clearDropHighlights();
+        if (zone) zone.classList.add('drag-over');
+        currentDropZone = zone;
+      }
+    });
+
+    function endDrag(e) {
+      if (!draggedEl) return;
+
+      if (dragStarted) {
+        const zone = findDropZoneAt(e.clientX, e.clientY);
+        if (zone) {
           zone.appendChild(draggedEl);
         }
-      });
+        draggedEl.classList.remove('dragging');
+      }
+
+      if (ghostEl) {
+        ghostEl.remove();
+        ghostEl = null;
+      }
+      clearDropHighlights();
+      draggedEl = null;
+      currentDropZone = null;
+      dragStarted = false;
     }
+
+    document.addEventListener('pointerup', endDrag);
+    document.addEventListener('pointercancel', endDrag);
 
     function initList(key) {
       const tierlist = document.getElementById('tierlist-' + key);
@@ -317,7 +406,6 @@
         zone.innerHTML = '';
         const tier = zone.dataset.tier;
         defaultTiers[key][tier].forEach(name => zone.appendChild(makeItem(name)));
-        setupDropzone(zone);
       });
     }
 
