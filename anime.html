@@ -257,14 +257,25 @@
 
     <p class="hint">Final decision?.</p>
 
-    <div class="back-link">
-      <a href="index.html">← Back to Portfolio</a>
+    
+    <h2>🎬 Animation movies</h2>
+    <div class="tierlist" id="tierlist-animation">
+      <div class="tier-row tier-S"><div class="tier-label">S</div><div class="tier-items" data-tier="S"></div></div>
+      <div class="tier-row tier-A"><div class="tier-label">A</div><div class="tier-items" data-tier="A"></div></div>
+      <div class="tier-row tier-B"><div class="tier-label">B</div><div class="tier-items" data-tier="B"></div></div>
+      <div class="tier-row tier-C"><div class="tier-label">C</div><div class="tier-items" data-tier="C"></div></div>
+      <div class="tier-row tier-D"><div class="tier-label">D</div><div class="tier-items" data-tier="D"></div></div>
+      <div class="tier-row tier-pool"><div class="tier-label">Unknown</div><div class="tier-items" data-tier="pool"></div></div>
     </div>
-  </div>
-
-  <footer>
-    © 2026 • Davide Zangari
-  </footer>
+    <div class="add-form">
+      <input type="text" id="input-anime" placeholder="Add an anime movie...">
+      <button onclick="addItem('movie')">Add</button>
+    </div>
+    <div class="actions-row">
+      <button class="reset-btn" onclick="resetList('animation')">Reset list</button>
+      <button class="download-btn" onclick="exportTierlist('animation', 'Preferiti')">📥 Save as PNG</button>
+    </div>
+    <p class="download-hint">💬 Your positions are not saved when you refresh the page! download it as .png, and share your list with your friends.</p>
 
   <script>
     // Elementi già posizionati nelle tier di partenza (riordinabili a piacere)
@@ -283,6 +294,14 @@
         B: ["Giorno's Theme (JoJo - Golden Wind)","Again (Fullmetal Alchemist Brotherhood OP1)","Dandadan - Otonoke" ],
         C: ["Gurenge (Demon Slayer OP)"],
         D: ["Tank! (Cowboy Bebop OP)"],
+        pool: []
+      },
+      animation: {
+        S: ["Shrek", "Ice Age", "Puss in Boots", "Spirit"],
+        A: ["Toy story","Inside out","Kung fu Panda", "Porco Rosso", "Antz", "Beauty and the beast"],
+        B: ["The iron giant", "Akira", "Ghost in the shell", "The boy and the heron", "Despicable me", "The aristocats", "Madagascar" ],
+        C: ["Rango", "Spirited Away", "Ratatouille","K-pop demon hunters", "Up", "Princess Mononoke","Cars","Tresure Planet", "Wall-e" ],
+        D: ["Big hero 6", "Super Mario"],
         pool: []
       }
     };
@@ -424,6 +443,7 @@
 
     initList('anime');
     initList('music');
+    initList('animation');
 
     ['input-anime', 'input-music'].forEach(id => {
       document.getElementById(id).addEventListener('keydown', (e) => {
